@@ -102,8 +102,9 @@ namespace CFP
 
 
 			if (layer != 0)
-				return -1;
+				return ERR_BRACKETS_MISMATCH;
 			obj = root;
+			return 0;
 		}
 	}
 }

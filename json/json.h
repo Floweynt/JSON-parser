@@ -12,6 +12,7 @@ namespace CFP
 		{
 			ERR_NO_BASE_OBJ = 1,
 			ERR_UNEXPECTED_NON_SPACE,
+			ERR_BRACKETS_MISMATCH
 		};
 		class CFPjson // parser object
 		{
