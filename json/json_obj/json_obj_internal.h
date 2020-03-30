@@ -51,6 +51,8 @@ namespace CFP
 				std::string& get_value_string();
 				std::vector<jsonobj>& get_value_array();
 				void clear();
+
+				bool operator== (jsonobj& rhs);
 			};
 		}
 	}

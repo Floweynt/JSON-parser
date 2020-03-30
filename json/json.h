@@ -62,6 +62,7 @@ namespace CFP
 
 		public:
 			int deserialize(std::string buf, JSONobj& obj);
+			int deserialize_file(std::string filename, JSONobj& obj);
 		};
 
 

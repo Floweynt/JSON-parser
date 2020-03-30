@@ -1,9 +1,31 @@
 #include "json.h"
+#include <cstdio>
+
+#ifdef _WIN32
+#pragma warning(disable: 4996) 
+#endif
+
 
 namespace CFP
 {
 	namespace json
 	{
+		int CFPjson::deserialize_file(std::string filename, JSONobj& obj)
+		{
+			FILE* fp = fopen(filename.c_str(), "r");
+			if (fp == NULL)
+				return -1;
+			fseek(fp, 0, SEEK_END);
+			size_t len = ftell(fp);
+			rewind(fp);
+
+			std::string buf;
+			buf.resize(len);
+
+			fread((void*)buf.c_str(), 1, len, fp);
+
+			return this->deserialize(buf, obj);
+		}
 		int CFPjson::deserialize(std::string buf, JSONobj& obj)
 		{
 			states s = OBJ;
@@ -11,6 +33,9 @@ namespace CFP
 
 			parse_frame frames;
 			intern::jsonobj root(types::VALUE_OBJ);
+			
+			JSONobj empty;
+			obj = empty;
 
 			std::string key;
 			std::string val;
@@ -83,9 +108,8 @@ namespace CFP
 					else if (buf[i] == '}')
 					{
 						layer--;
-						if (layer == 0)
-							break;
-						root = frames.merge_frames(root);
+						if (layer != 0)
+							root = frames.merge_frames(root);
 					}
 					else if (isspace(buf[i]));
 					else
@@ -98,6 +122,8 @@ namespace CFP
 					else
 						return ERR_UNEXPECTED_NON_SPACE;
 				}
+				if (layer == 0)
+					break;
 			}
 
 

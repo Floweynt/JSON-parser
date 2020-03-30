@@ -11,7 +11,7 @@ namespace CFP
 
 
 		public:
-			inline JSONobj() {	}
+			inline JSONobj() { }
 			JSONobj(intern::jsonobj o) { this->object = o; }
 			inline operator std::string() { return object.get_value_string(); }
 
@@ -19,6 +19,7 @@ namespace CFP
 			JSONobj operator [](int index) { return this->object.get_value_array()[index]; }
 
 			friend std::ostream& operator<<(std::ostream& os, const JSONobj& out);
+			bool operator ==(JSONobj& rhs);
 		};
 	}
 }
