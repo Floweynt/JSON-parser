@@ -18,5 +18,5 @@ objects/example.o : test.cpp | objects
 	$(setup)
 	$(CC) $< -o $@ -c
 
-example : objects/example.o objects/CFPjson.a | objects
+test : objects/example.o objects/CFPjson.a | objects
 	$(CC) $+ -o $@
