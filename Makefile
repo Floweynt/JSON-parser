@@ -1,5 +1,5 @@
 CC = g++
-.DEFAULT_GOAL := example
+.DEFAULT_GOAL := test
 objects:
 	mkdir $@
 
