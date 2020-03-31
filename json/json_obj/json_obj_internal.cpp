@@ -63,6 +63,20 @@ namespace CFP
 				return this->value_array;
 			}
 
+			int& jsonobj::get_value_int()
+			{
+				if (this->t != types::VALUE_INT)
+					throw json_type_error("requesting a double in a non-array type");
+				return this->value_int;
+			}
+
+			double& jsonobj::get_value_double()
+			{
+				if (this->t != types::VALUE_DOUBLE)
+					throw json_type_error("requesting a double in a non-array type");
+				return this->value_double;
+			}
+
 			void jsonobj::clear()
 			{
 				this->value_array.clear();
@@ -70,6 +84,41 @@ namespace CFP
 				this->value_int = 0;
 				this->value_obj.clear();
 				this->value_string.clear();
+			}
+
+			int convert_numeric(std::string s, jsonobj& j)
+			{
+				bool t;
+				double d;
+				int i;
+				if (s.find('.') != std::string::npos)
+				{
+					try
+					{
+						d = stod(s);
+					}
+					catch (...)
+					{
+						return -1;
+					}
+					j.get_type() = types::VALUE_DOUBLE;
+					j.get_value_double() = d;
+				}
+				else
+				{
+					try
+					{
+						i = stoi(s);
+
+					}
+					catch (...)
+					{
+						return -1;
+					}
+					j.get_type() = types::VALUE_DOUBLE;
+					j.get_value_double() = i;
+				}
+				return 0;
 			}
 		}
 	}

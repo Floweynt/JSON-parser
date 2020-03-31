@@ -40,6 +40,8 @@ namespace CFP
 			std::string key;
 			std::string val;
 
+			std::string num;
+
 			for (size_t i = 0; i < buf.size(); i++)
 			{
 				if (layer == 0 && i != 0)
@@ -76,6 +78,11 @@ namespace CFP
 				case WAIT_FOR_VALUE:
 					if (buf[i] == '\"')
 						s = STRING_VALUE;
+					else if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+')
+					{
+						s = NUMERIC_VALUE;
+						i--;
+					}
 					else if (buf[i] == '[')
 						s = ARRAY_VALUE;
 					else if (buf[i] == '{')
@@ -95,15 +102,15 @@ namespace CFP
 					if (buf[i] == '\"')
 					{
 						s = WAIT_FOR_COMMA;
-						root.get_value_obj()[key] = val;
-						key.clear();
+						root.insert_v(val, key);
 						val.clear();
+						key.clear();
 					}
 					else
 						val += buf[i];
 					break;
 				case WAIT_FOR_COMMA:
-					if (buf[i] == ',')
+ 					if (buf[i] == ',')
 						s = WAIT_FOR_KEY;
 					else if (buf[i] == '}')
 					{
@@ -121,6 +128,32 @@ namespace CFP
 					else if (isspace(buf[i]));
 					else
 						return ERR_UNEXPECTED_NON_SPACE;
+				case NUMERIC_VALUE:
+					if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+' || buf[i] == 'e' || buf[i] == 'E' || buf[i] == '.')
+						num += buf[i];
+					else if (isspace(buf[i]))
+					{
+						intern::jsonobj value_num;
+						if (intern::convert_numeric(num, value_num) != 0)
+							return -1;
+						root.insert_v(value_num, key);
+						num.clear();
+						key.clear();
+						s = WAIT_FOR_COMMA;
+					}
+					else if (buf[i] == ',')
+					{
+						intern::jsonobj value_num;
+						if (intern::convert_numeric(num, value_num) != 0)
+							return -1;
+						root.insert_v(value_num, key);
+						num.clear();
+						key.clear();
+						s = WAIT_FOR_KEY;
+					}
+					else
+						return -1;
+					break;
 				}
 				if (layer == 0)
 					break;

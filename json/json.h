@@ -29,6 +29,7 @@ namespace CFP
 				ARRAY_VALUE,
 				ARRAY_WAIT_FOR_COMMA,
 				ARRAY_WAIT_FOR_VALUE,
+				NUMERIC_VALUE
 			};
 
 			struct pack
@@ -41,6 +42,11 @@ namespace CFP
 			{
 				std::stack<pack> frames;
 			public:
+
+				pack top()
+				{
+					return frames.top();
+				}
 				intern::jsonobj merge_frames(intern::jsonobj j)
 				{
 					pack p = frames.top();
