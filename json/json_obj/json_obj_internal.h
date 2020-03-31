@@ -9,13 +9,14 @@
 
 namespace CFP
 {
-	class json_type_error : CFP_error // errors relating to types in json
-	{
-	public:
-		json_type_error(const char* p) : CFP_error(p) {};
-	};
 	namespace json
 	{
+		class json_type_error : public CFP_error // errors relating to types in json
+		{
+		public:
+			json_type_error(const char* p) : CFP_error(p) {};
+		};
+
 		enum types // json types
 		{
 			VALUE_OBJ,

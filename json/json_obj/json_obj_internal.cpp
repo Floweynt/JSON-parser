@@ -66,14 +66,14 @@ namespace CFP
 			int& jsonobj::get_value_int()
 			{
 				if (this->t != types::VALUE_INT)
-					throw json_type_error("requesting a double in a non-array type");
+					throw json_type_error("requesting a int in a non-int type");
 				return this->value_int;
 			}
 
 			double& jsonobj::get_value_double()
 			{
 				if (this->t != types::VALUE_DOUBLE)
-					throw json_type_error("requesting a double in a non-array type");
+					throw json_type_error("requesting a double in a non-double type");
 				return this->value_double;
 			}
 
@@ -115,8 +115,8 @@ namespace CFP
 					{
 						return -1;
 					}
-					j.get_type() = types::VALUE_DOUBLE;
-					j.get_value_double() = i;
+					j.get_type() = types::VALUE_INT;
+					j.get_value_int() = i;
 				}
 				return 0;
 			}

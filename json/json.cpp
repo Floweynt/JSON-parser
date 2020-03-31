@@ -1,11 +1,6 @@
 #include "json.h"
 #include <cstdio>
 
-#ifdef _WIN32
-#pragma warning(disable: 4996) 
-#endif
-
-
 namespace CFP
 {
 	namespace json
@@ -115,6 +110,7 @@ namespace CFP
 					else if (buf[i] == '}')
 					{
 						layer--;
+						//if(frames.t)
 						if (layer != 0)
 							root = frames.merge_frames(root);
 					}
