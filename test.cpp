@@ -43,11 +43,13 @@ int main()
 	catch (const CFP::CFP_error & e)
 	{
 		std::cout << "\x1b[31mfailed\x1b[0m: exception thrown with a what of:" << std::endl
-			<< e.what();
+			<< e.what() << std::endl;
+		return -1;
 	}
 	catch (...)
 	{
 		std::cout << "\x1b[31mfailed\x1b[0m: exception thrown" << std::endl;
+		return -1;
 	}
 
 	auto end = std::chrono::steady_clock::now();
