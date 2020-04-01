@@ -34,6 +34,11 @@ int main()
 		if (obj["number"] != 55 || obj["float"] != 123.4 || ret != 0)
 			ptestcase_err(2, ret);
 		passed(2);
+
+		ret = parser.deserialize_file("testcase/testcase3.json", obj);
+		if (obj["names"][0] != "Joe" || obj["names"][2] != "Sans" || obj["names"][3] != "Chara" || ret != 0)
+			ptestcase_err(3, ret);
+		passed(3);
 	}
 	catch (const CFP::CFP_error & e)
 	{

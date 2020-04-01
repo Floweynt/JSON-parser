@@ -1,5 +1,40 @@
 #include "json.h"
 #include <cstdio>
+#include <stack>
+
+struct pack
+{
+	CFP::json::intern::jsonobj o;
+	std::string key;
+};
+
+class parse_frame
+{
+	std::stack<pack> frames;
+public:
+
+	CFP::json::intern::jsonobj merge_frames(CFP::json::intern::jsonobj j)
+	{
+		pack p = frames.top();
+		p.o.insert_v(j, p.key);
+		frames.pop();
+		frames.push(p);
+		return p.o;
+	}
+
+	void push_frame(std::string key, CFP::json::intern::jsonobj o)
+	{
+		pack p;
+		p.o = o;
+		p.key = key;
+		frames.push(p);
+	}
+
+	CFP::json::intern::jsonobj top()
+	{
+		return this->frames.top().o;
+	}
+};
 
 namespace CFP
 {
@@ -55,7 +90,7 @@ namespace CFP
 						s = KEY;
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_NON_SPACE;
+						return ERR_UNEXPECTED_CHAR;
 					break;
 				case KEY:
 					if (buf[i] == '\"')
@@ -68,7 +103,7 @@ namespace CFP
 						s = WAIT_FOR_VALUE;
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_NON_SPACE;
+						return ERR_UNEXPECTED_CHAR;
 					break;
 				case WAIT_FOR_VALUE:
 					if (buf[i] == '\"')
@@ -79,7 +114,14 @@ namespace CFP
 						i--;
 					}
 					else if (buf[i] == '[')
-						s = ARRAY_VALUE;
+					{
+						layer++;
+						frames.push_frame(key, root);
+						key.clear();
+						root.clear();
+						root.get_type() = types::VALUE_ARRAY;
+						s = ARRAY_WAIT_FOR_VALUE;
+					}
 					else if (buf[i] == '{')
 					{
 						layer++;
@@ -91,7 +133,11 @@ namespace CFP
 					}
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_NON_SPACE;
+						return ERR_UNEXPECTED_CHAR;
+					break;
+				case ARRAY_WAIT_FOR_VALUE:
+					if (buf[i] == '\"')
+						s = ARRAY_STRING_VALUE;
 					break;
 				case STRING_VALUE:
 					if (buf[i] == '\"')
@@ -99,31 +145,41 @@ namespace CFP
 						s = WAIT_FOR_COMMA;
 						root.insert_v(val, key);
 						val.clear();
-						key.clear();
 					}
 					else
 						val += buf[i];
 					break;
 				case WAIT_FOR_COMMA:
- 					if (buf[i] == ',')
+					if (buf[i] == ',')
 						s = WAIT_FOR_KEY;
 					else if (buf[i] == '}')
 					{
 						layer--;
-						//if(frames.t)
 						if (layer != 0)
 							root = frames.merge_frames(root);
 					}
+					else if (buf[i] == ']')
+						return ERR_BRACKETS_MISMATCH;
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_NON_SPACE;
+						return ERR_UNEXPECTED_CHAR;
 					break;
 				case ARRAY_WAIT_FOR_COMMA:
 					if (buf[i] == ',')
 						s = ARRAY_WAIT_FOR_VALUE;
+					else if (buf[i] == ']')
+					{
+						layer--;
+						if (layer != 0)
+							root = frames.merge_frames(root);
+						s = WAIT_FOR_COMMA;
+					}
+					else if (buf[i] == '}')
+						return ERR_BRACKETS_MISMATCH;
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_NON_SPACE;
+						return ERR_UNEXPECTED_CHAR;
+					break;
 				case NUMERIC_VALUE:
 					if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+' || buf[i] == 'e' || buf[i] == 'E' || buf[i] == '.')
 						num += buf[i];
@@ -148,8 +204,17 @@ namespace CFP
 						s = WAIT_FOR_KEY;
 					}
 					else
-						return -1;
+						return ERR_UNEXPECTED_CHAR;
 					break;
+				case ARRAY_STRING_VALUE:
+					if (buf[i] == '\"')
+					{
+						s = ARRAY_WAIT_FOR_COMMA;
+						root.insert_v(val, key);
+						val.clear();
+					}
+					else
+						val += buf[i];
 				}
 				if (layer == 0)
 					break;
