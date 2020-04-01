@@ -18,7 +18,6 @@ public:
 		pack p = frames.top();
 		p.o.insert_v(j, p.key);
 		frames.pop();
-		frames.push(p);
 		return p.o;
 	}
 
@@ -138,6 +137,47 @@ namespace CFP
 				case ARRAY_WAIT_FOR_VALUE:
 					if (buf[i] == '\"')
 						s = ARRAY_STRING_VALUE;
+					else if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+')
+					{
+						s = ARRAY_NUMERIC_VALUE;
+						i--;
+					}
+					else if (buf[i] == '[')
+					{
+						layer++;
+						frames.push_frame(key, root);
+						key.clear();
+						root.clear();
+						root.get_type() = types::VALUE_ARRAY;
+						s = ARRAY_WAIT_FOR_VALUE;
+					}
+					else if (isspace(buf[i]));
+					else
+						return ERR_UNEXPECTED_CHAR;
+					break;
+				case ARRAY_NUMERIC_VALUE:
+					if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+' || buf[i] == 'e' || buf[i] == 'E' || buf[i] == '.')
+						num += buf[i];
+					else if (isspace(buf[i]))
+					{
+						intern::jsonobj value_num;
+						if (intern::convert_numeric(num, value_num) != 0)
+							return -1;
+						root.insert_v(value_num, key);
+						num.clear();
+						key.clear();
+						s = ARRAY_WAIT_FOR_COMMA;
+					}
+					else if (buf[i] == ',')
+					{
+						intern::jsonobj value_num;
+						if (intern::convert_numeric(num, value_num) != 0)
+							return -1;
+						root.insert_v(value_num, key);
+						num.clear();
+						key.clear();
+						s = ARRAY_WAIT_FOR_VALUE;
+					}
 					break;
 				case STRING_VALUE:
 					if (buf[i] == '\"')
@@ -172,7 +212,10 @@ namespace CFP
 						layer--;
 						if (layer != 0)
 							root = frames.merge_frames(root);
-						s = WAIT_FOR_COMMA;
+						if (root.get_type() == types::VALUE_ARRAY)
+							s = ARRAY_WAIT_FOR_COMMA;
+						else if(root.get_type() == types::VALUE_OBJ)
+							s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == '}')
 						return ERR_BRACKETS_MISMATCH;

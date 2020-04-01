@@ -39,6 +39,11 @@ int main()
 		if (obj["names"][0] != "Joe" || obj["names"][2] != "Sans" || obj["names"][3] != "Chara" || ret != 0)
 			ptestcase_err(3, ret);
 		passed(3);
+
+		ret = parser.deserialize_file("testcase/testcase4.json", obj);
+		if (obj["matrix"][0][0] != 1 || obj["matrix"][0][1] != 2 || obj["matrix"][1][1] != 4 || ret != 0)
+			ptestcase_err(4, ret);
+		passed(4);
 	}
 	catch (const CFP::CFP_error & e)
 	{
