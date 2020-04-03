@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright 2020 Ruiqi Li
+
 #include "json/json.h"
 #include <iostream>
 #include <chrono> 
@@ -44,6 +47,19 @@ int main()
 		if (obj["matrix"][0][0] != 1 || obj["matrix"][0][1] != 2 || obj["matrix"][1][1] != 4 || ret != 0)
 			ptestcase_err(4, ret);
 		passed(4);
+
+		ret = parser.deserialize_file("testcase/testcase_fail1.json", obj);
+		if (ret != ERR_BRACKETS_MISMATCH)
+			ptestcase_err(5, ret);
+		passed(5);
+
+		ret = parser.deserialize_file("testcase/testcase_null.json", obj);
+		if (ret != 0)
+			ptestcase_err(6, ret);
+		passed(6);
+
+		ret = parser.deserialize_file("testcase/testcase7.json", obj);
+		if (obj["A"] || obj)
 	}
 	catch (const CFP::CFP_error & e)
 	{

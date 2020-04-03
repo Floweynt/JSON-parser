@@ -1,5 +1,14 @@
+// SPDX-License-Identifier: MIT
+// Copyright 2020 Ruiqi Li
+
 #include "json_obj_internal.h"
 #include <ostream>
+#include <stdexcept>
+
+#ifdef _WIN32
+#pragma warning(disable: 4996) 
+#pragma warning(disable: 26812)
+#endif
 
 namespace CFP
 {
@@ -8,7 +17,6 @@ namespace CFP
 		class JSONobj
 		{
 			intern::jsonobj object;
-
 
 		public:
 			inline JSONobj() { }
@@ -19,8 +27,8 @@ namespace CFP
 			inline bool operator!=(double rhs) { return object.get_value_double() != rhs; }
 			inline bool operator!=(const char* rhs) { return object.get_value_string() != (std::string)rhs; }
 
-			JSONobj operator [](std::string index) { return this->object.get_value_obj()[index]; }
-			JSONobj operator [](int index) { return this->object.get_value_array()[index]; }
+			JSONobj operator [](const std::string index) { return this->object.get_value_obj()[index]; }
+			JSONobj operator [](const int index) { return this->object.get_value_array()[index]; }
 
 			friend std::ostream& operator<<(std::ostream& os, const JSONobj& out);
 			bool operator ==(JSONobj& rhs);

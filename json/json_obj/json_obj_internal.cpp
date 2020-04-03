@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright 2020 Ruiqi Li
+
 #include "json_obj_internal.h"
 namespace CFP
 {
@@ -75,6 +78,13 @@ namespace CFP
 				if (this->t != types::VALUE_DOUBLE)
 					throw json_type_error("requesting a double in a non-double type");
 				return this->value_double;
+			}
+
+			bool& jsonobj::get_value_bool()
+			{
+				if (this->t != types::VALUE_BOOL)
+					throw json_type_error("requesting a bool in a non-bool type");
+				return this->value_bool;
 			}
 
 			void jsonobj::clear()

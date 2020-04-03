@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright 2020 Ruiqi Li
+
 #include "json.h"
 #include <cstdio>
 #include <stack>
@@ -68,7 +71,7 @@ namespace CFP
 
 			std::string key;
 			std::string val;
-
+			std::string other;
 			std::string num;
 
 			for (size_t i = 0; i < buf.size(); i++)
@@ -82,7 +85,19 @@ namespace CFP
 					if (buf[i] != '{')
 						return ERR_NO_BASE_OBJ;
 					else
-						s = WAIT_FOR_KEY;
+						s = WAIT_FOR_KEY_OBJ;
+					break;
+				case WAIT_FOR_KEY_OBJ:
+					if (buf[i] == '\"')
+						s = KEY;
+					else if (isspace(buf[i]));
+					else if (buf[i] == '}')
+					{
+						obj = root;
+						return 0;
+					}
+					else
+						return ERR_UNEXPECTED_CHAR;
 					break;
 				case WAIT_FOR_KEY:
 					if (buf[i] == '\"')
@@ -112,6 +127,11 @@ namespace CFP
 						s = NUMERIC_VALUE;
 						i--;
 					}
+					else if (buf[i] == 't' || buf[i] == 'f' || buf[i] == 'n')
+					{
+						s = KEYWORD_VALUE;
+						i--;
+					}
 					else if (buf[i] == '[')
 					{
 						layer++;
@@ -134,6 +154,43 @@ namespace CFP
 					else
 						return ERR_UNEXPECTED_CHAR;
 					break;
+				case KEYWORD_VALUE:
+					if (isspace(buf[i]))
+					{
+						intern::jsonobj value_bool;
+						value_bool.get_type() = types::VALUE_BOOL;
+						if (other == "true")
+							value_bool.get_value_bool() = true;
+						else if (other == "false")
+							value_bool.get_value_bool() = false;
+						else if (other == "null")
+							value_bool.get_type() = types::VALUE_NULL;
+						else
+							return ERR_UNEXPECTED_CHAR;
+						root.insert_v(value_bool, key);
+						key.clear();
+						s = WAIT_FOR_COMMA;
+					}
+					else if (buf[i] == ',')
+					{
+						intern::jsonobj value_bool;
+						value_bool.get_type() = types::VALUE_BOOL;
+						if (other == "true")
+							value_bool.get_value_bool() = true;
+						else if (other == "false")
+							value_bool.get_value_bool() = false;
+						else if (other == "null")
+							value_bool.get_type() = types::VALUE_NULL;
+						else
+							return ERR_UNEXPECTED_CHAR;
+						root.insert_v(value_bool, key);
+						key.clear();
+						other.clear();
+						s = WAIT_FOR_KEY;
+					}
+					else
+						other += buf[i];
+					break;
 				case ARRAY_WAIT_FOR_VALUE:
 					if (buf[i] == '\"')
 						s = ARRAY_STRING_VALUE;
@@ -155,6 +212,40 @@ namespace CFP
 					else
 						return ERR_UNEXPECTED_CHAR;
 					break;
+				case ARRAY_KEYWORD_VALUE:
+					if (isspace(buf[i]))
+					{
+						intern::jsonobj value_bool;
+						value_bool.get_type() = types::VALUE_BOOL;
+						if (other == "true")
+							value_bool.get_value_bool() = true;
+						else if (other == "false")
+							value_bool.get_value_bool() = false;
+						else if (other == "null")
+							value_bool.get_type() = types::VALUE_NULL;
+						else
+							return ERR_UNEXPECTED_CHAR;
+						root.insert_v(value_bool, key);
+						key.clear();
+						s = ARRAY_WAIT_FOR_COMMA;
+					}
+					else if (buf[i] == ',')
+					{
+						intern::jsonobj value_bool;
+						value_bool.get_type() = types::VALUE_BOOL;
+						if (other == "true")
+							value_bool.get_value_bool() = true;
+						else if (other == "false")
+							value_bool.get_value_bool() = false;
+						else if (other == "null")
+							value_bool.get_type() = types::VALUE_NULL;
+						else
+							return ERR_UNEXPECTED_CHAR;
+						root.insert_v(value_bool, key);
+						key.clear();
+						other.clear();
+						s = ARRAY_WAIT_FOR_VALUE;
+					}
 				case ARRAY_NUMERIC_VALUE:
 					if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+' || buf[i] == 'e' || buf[i] == 'E' || buf[i] == '.')
 						num += buf[i];
@@ -233,7 +324,7 @@ namespace CFP
 							return -1;
 						root.insert_v(value_num, key);
 						num.clear();
-						key.clear();
+						key.clear(); 
 						s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ',')

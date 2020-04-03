@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright 2020 Ruiqi Li
+
 #include "json_obj.h"
 
 namespace CFP
