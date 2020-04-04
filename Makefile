@@ -16,7 +16,7 @@ objects/json.a : objects/json.o objects/json_obj.o objects/json_obj_internal.o |
 objects/example.o : test.cpp | objects
 	$(CC) $< -o $@ -c
 
-test : objects/example.o objects/CFPjson.a | objects
+test : objects/example.o objects/json.a | objects
 	$(CC) $+ -o $@
 lib : objects/json.a
 	@echo "creating statically-linked libary objects/json.a"
