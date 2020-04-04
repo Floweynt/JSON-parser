@@ -10,13 +10,13 @@ objects/json_obj.o : json/json_obj/json_obj.cpp | objects json/json_obj/json_obj
 objects/json.o : json/json.cpp | objects json/json.h
 	$(CC) $< -o $@ -c
 
-objects/CFPjson.a : objects/json.o objects/json_obj.o objects/json_obj_internal.o | objects
-	$(setup)
+objects/json.a : objects/json.o objects/json_obj.o objects/json_obj_internal.o | objects
 	ar rvs $@ $+
 
 objects/example.o : test.cpp | objects
-	$(setup)
 	$(CC) $< -o $@ -c
 
 test : objects/example.o objects/CFPjson.a | objects
 	$(CC) $+ -o $@
+lib : objects/json.a
+	@echo "creating statically-linked libary objects/json.a"
