@@ -7,7 +7,7 @@
 
 struct pack
 {
-	CFP::json::intern::jsonobj o;
+	json::intern::jsonobj o;
 	std::string key;
 };
 
@@ -16,7 +16,7 @@ class parse_frame
 	std::stack<pack> frames;
 public:
 
-	CFP::json::intern::jsonobj merge_frames(CFP::json::intern::jsonobj j)
+	json::intern::jsonobj merge_frames(json::intern::jsonobj j)
 	{
 		pack p = frames.top();
 		p.o.insert_v(j, p.key);
@@ -24,7 +24,7 @@ public:
 		return p.o;
 	}
 
-	void push_frame(std::string key, CFP::json::intern::jsonobj o)
+	void push_frame(std::string key, json::intern::jsonobj o)
 	{
 		pack p;
 		p.o = o;
@@ -32,333 +32,346 @@ public:
 		frames.push(p);
 	}
 
-	CFP::json::intern::jsonobj top()
+	json::intern::jsonobj top()
 	{
 		return this->frames.top().o;
 	}
 };
 
-namespace CFP
+namespace json
 {
-	namespace json
+	int JSONparser::deserialize_file(std::string filename, JSONobj& obj)
 	{
-		int CFPjson::deserialize_file(std::string filename, JSONobj& obj)
+		FILE* fp = fopen(filename.c_str(), "r");
+		if (fp == NULL)
+			return -1;
+		fseek(fp, 0, SEEK_END);
+		size_t len = ftell(fp);
+		rewind(fp);
+
+		std::string buf;
+		buf.resize(len);
+
+		fread((void*)buf.c_str(), 1, len, fp);
+
+		return this->deserialize(buf, obj);
+	}
+	int JSONparser::deserialize(std::string buf, JSONobj& obj)
+	{
+		states s = OBJ;
+		size_t layer = 0;
+
+		parse_frame frames;
+		intern::jsonobj root(types::VALUE_OBJ);
+
+		JSONobj empty;
+		obj = empty;
+
+		std::string key;
+		std::string val;
+		std::string other;
+		std::string num;
+
+		for (size_t i = 0; i < buf.size(); i++)
 		{
-			FILE* fp = fopen(filename.c_str(), "r");
-			if (fp == NULL)
-				return -1;
-			fseek(fp, 0, SEEK_END);
-			size_t len = ftell(fp);
-			rewind(fp);
-
-			std::string buf;
-			buf.resize(len);
-
-			fread((void*)buf.c_str(), 1, len, fp);
-
-			return this->deserialize(buf, obj);
-		}
-		int CFPjson::deserialize(std::string buf, JSONobj& obj)
-		{
-			states s = OBJ;
-			size_t layer = 0;
-
-			parse_frame frames;
-			intern::jsonobj root(types::VALUE_OBJ);
-			
-			JSONobj empty;
-			obj = empty;
-
-			std::string key;
-			std::string val;
-			std::string other;
-			std::string num;
-
-			for (size_t i = 0; i < buf.size(); i++)
+			if (layer == 0 && i != 0)
+				return 0;
+			switch (s)
 			{
-				if (layer == 0 && i != 0)
-					return 0;
-				switch (s)
+			case OBJ:
+				layer++;
+				if (buf[i] != '{')
+					return ERR_NO_BASE_OBJ;
+				else
+					s = WAIT_FOR_KEY_OBJ;
+				break;
+
+				/**************** WAITS ****************/
+
+			case WAIT_FOR_KEY:
+				if (buf[i] == '\"')
+					s = KEY;
+				else if (isspace(buf[i]));
+				else
+					return ERR_UNEXPECTED_CHAR;
+				break;
+			case WAIT_FOR_KEY_OBJ:
+				if (buf[i] == '\"')
+					s = KEY;
+				else if (isspace(buf[i]));
+				else if (buf[i] == '}')
 				{
-				case OBJ:
-					layer++;
-					if (buf[i] != '{')
-						return ERR_NO_BASE_OBJ;
-					else
-						s = WAIT_FOR_KEY_OBJ;
-					break;
-				case WAIT_FOR_KEY_OBJ:
-					if (buf[i] == '\"')
-						s = KEY;
-					else if (isspace(buf[i]));
-					else if (buf[i] == '}')
-					{
-						obj = root;
-						return 0;
-					}
-					else
-						return ERR_UNEXPECTED_CHAR;
-					break;
-				case WAIT_FOR_KEY:
-					if (buf[i] == '\"')
-						s = KEY;
-					else if (isspace(buf[i]));
-					else
-						return ERR_UNEXPECTED_CHAR;
-					break;
-				case KEY:
-					if (buf[i] == '\"')
-						s = WAIT_FOR_COLON;
-					else
-						key += buf[i];
-					break;
-				case WAIT_FOR_COLON:
-					if (buf[i] == ':')
-						s = WAIT_FOR_VALUE;
-					else if (isspace(buf[i]));
-					else
-						return ERR_UNEXPECTED_CHAR;
-					break;
-				case WAIT_FOR_VALUE:
-					if (buf[i] == '\"')
-						s = STRING_VALUE;
-					else if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+')
-					{
-						s = NUMERIC_VALUE;
-						i--;
-					}
-					else if (buf[i] == 't' || buf[i] == 'f' || buf[i] == 'n')
-					{
-						s = KEYWORD_VALUE;
-						i--;
-					}
-					else if (buf[i] == '[')
-					{
-						layer++;
-						frames.push_frame(key, root);
-						key.clear();
-						root.clear();
-						root.get_type() = types::VALUE_ARRAY;
-						s = ARRAY_WAIT_FOR_VALUE;
-					}
-					else if (buf[i] == '{')
-					{
-						layer++;
-						frames.push_frame(key, root);
-						key.clear();
-						root.clear();
-						root.get_type() = types::VALUE_OBJ;
-						s = WAIT_FOR_KEY;
-					}
-					else if (isspace(buf[i]));
-					else
-						return ERR_UNEXPECTED_CHAR;
-					break;
-				case KEYWORD_VALUE:
-					if (isspace(buf[i]))
-					{
-						intern::jsonobj value_bool;
-						value_bool.get_type() = types::VALUE_BOOL;
-						if (other == "true")
-							value_bool.get_value_bool() = true;
-						else if (other == "false")
-							value_bool.get_value_bool() = false;
-						else if (other == "null")
-							value_bool.get_type() = types::VALUE_NULL;
-						else
-							return ERR_UNEXPECTED_CHAR;
-						root.insert_v(value_bool, key);
-						key.clear();
-						s = WAIT_FOR_COMMA;
-					}
-					else if (buf[i] == ',')
-					{
-						intern::jsonobj value_bool;
-						value_bool.get_type() = types::VALUE_BOOL;
-						if (other == "true")
-							value_bool.get_value_bool() = true;
-						else if (other == "false")
-							value_bool.get_value_bool() = false;
-						else if (other == "null")
-							value_bool.get_type() = types::VALUE_NULL;
-						else
-							return ERR_UNEXPECTED_CHAR;
-						root.insert_v(value_bool, key);
-						key.clear();
-						other.clear();
-						s = WAIT_FOR_KEY;
-					}
-					else
-						other += buf[i];
-					break;
-				case ARRAY_WAIT_FOR_VALUE:
-					if (buf[i] == '\"')
-						s = ARRAY_STRING_VALUE;
-					else if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+')
-					{
-						s = ARRAY_NUMERIC_VALUE;
-						i--;
-					}
-					else if (buf[i] == '[')
-					{
-						layer++;
-						frames.push_frame(key, root);
-						key.clear();
-						root.clear();
-						root.get_type() = types::VALUE_ARRAY;
-						s = ARRAY_WAIT_FOR_VALUE;
-					}
-					else if (isspace(buf[i]));
-					else
-						return ERR_UNEXPECTED_CHAR;
-					break;
-				case ARRAY_KEYWORD_VALUE:
-					if (isspace(buf[i]))
-					{
-						intern::jsonobj value_bool;
-						value_bool.get_type() = types::VALUE_BOOL;
-						if (other == "true")
-							value_bool.get_value_bool() = true;
-						else if (other == "false")
-							value_bool.get_value_bool() = false;
-						else if (other == "null")
-							value_bool.get_type() = types::VALUE_NULL;
-						else
-							return ERR_UNEXPECTED_CHAR;
-						root.insert_v(value_bool, key);
-						key.clear();
-						s = ARRAY_WAIT_FOR_COMMA;
-					}
-					else if (buf[i] == ',')
-					{
-						intern::jsonobj value_bool;
-						value_bool.get_type() = types::VALUE_BOOL;
-						if (other == "true")
-							value_bool.get_value_bool() = true;
-						else if (other == "false")
-							value_bool.get_value_bool() = false;
-						else if (other == "null")
-							value_bool.get_type() = types::VALUE_NULL;
-						else
-							return ERR_UNEXPECTED_CHAR;
-						root.insert_v(value_bool, key);
-						key.clear();
-						other.clear();
-						s = ARRAY_WAIT_FOR_VALUE;
-					}
-				case ARRAY_NUMERIC_VALUE:
-					if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+' || buf[i] == 'e' || buf[i] == 'E' || buf[i] == '.')
-						num += buf[i];
-					else if (isspace(buf[i]))
-					{
-						intern::jsonobj value_num;
-						if (intern::convert_numeric(num, value_num) != 0)
-							return -1;
-						root.insert_v(value_num, key);
-						num.clear();
-						key.clear();
-						s = ARRAY_WAIT_FOR_COMMA;
-					}
-					else if (buf[i] == ',')
-					{
-						intern::jsonobj value_num;
-						if (intern::convert_numeric(num, value_num) != 0)
-							return -1;
-						root.insert_v(value_num, key);
-						num.clear();
-						key.clear();
-						s = ARRAY_WAIT_FOR_VALUE;
-					}
-					break;
-				case STRING_VALUE:
-					if (buf[i] == '\"')
-					{
-						s = WAIT_FOR_COMMA;
-						root.insert_v(val, key);
-						val.clear();
-					}
-					else
-						val += buf[i];
-					break;
-				case WAIT_FOR_COMMA:
-					if (buf[i] == ',')
-						s = WAIT_FOR_KEY;
-					else if (buf[i] == '}')
-					{
-						layer--;
-						if (layer != 0)
-							root = frames.merge_frames(root);
-					}
-					else if (buf[i] == ']')
-						return ERR_BRACKETS_MISMATCH;
-					else if (isspace(buf[i]));
-					else
-						return ERR_UNEXPECTED_CHAR;
-					break;
-				case ARRAY_WAIT_FOR_COMMA:
-					if (buf[i] == ',')
-						s = ARRAY_WAIT_FOR_VALUE;
-					else if (buf[i] == ']')
-					{
-						layer--;
-						if (layer != 0)
-							root = frames.merge_frames(root);
-						if (root.get_type() == types::VALUE_ARRAY)
-							s = ARRAY_WAIT_FOR_COMMA;
-						else if(root.get_type() == types::VALUE_OBJ)
-							s = WAIT_FOR_COMMA;
-					}
-					else if (buf[i] == '}')
-						return ERR_BRACKETS_MISMATCH;
-					else if (isspace(buf[i]));
-					else
-						return ERR_UNEXPECTED_CHAR;
-					break;
-				case NUMERIC_VALUE:
-					if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+' || buf[i] == 'e' || buf[i] == 'E' || buf[i] == '.')
-						num += buf[i];
-					else if (isspace(buf[i]))
-					{
-						intern::jsonobj value_num;
-						if (intern::convert_numeric(num, value_num) != 0)
-							return -1;
-						root.insert_v(value_num, key);
-						num.clear();
-						key.clear(); 
-						s = WAIT_FOR_COMMA;
-					}
-					else if (buf[i] == ',')
-					{
-						intern::jsonobj value_num;
-						if (intern::convert_numeric(num, value_num) != 0)
-							return -1;
-						root.insert_v(value_num, key);
-						num.clear();
-						key.clear();
-						s = WAIT_FOR_KEY;
-					}
-					else
-						return ERR_UNEXPECTED_CHAR;
-					break;
-				case ARRAY_STRING_VALUE:
-					if (buf[i] == '\"')
-					{
-						s = ARRAY_WAIT_FOR_COMMA;
-						root.insert_v(val, key);
-						val.clear();
-					}
-					else
-						val += buf[i];
+					obj = root;
+					return 0;
 				}
-				if (layer == 0)
-					break;
+				else
+					return ERR_UNEXPECTED_CHAR;
+				break;
+			case WAIT_FOR_COLON:
+				if (buf[i] == ':')
+					s = WAIT_FOR_VALUE;
+				else if (isspace(buf[i]));
+				else
+					return ERR_UNEXPECTED_CHAR;
+				break;
+			case WAIT_FOR_VALUE:
+				if (buf[i] == '\"')
+					s = STRING_VALUE;
+				else if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+')
+				{
+					s = NUMERIC_VALUE;
+					i--;
+				}
+				else if (buf[i] == 't' || buf[i] == 'f' || buf[i] == 'n')
+				{
+					s = KEYWORD_VALUE;
+					i--;
+				}
+				else if (buf[i] == '[')
+				{
+					layer++;
+					frames.push_frame(key, root);
+					key.clear();
+					root.clear();
+					root.get_type() = types::VALUE_ARRAY;
+					s = ARRAY_WAIT_FOR_VALUE;
+				}
+				else if (buf[i] == '{')
+				{
+					layer++;
+					frames.push_frame(key, root);
+					key.clear();
+					root.clear();
+					root.get_type() = types::VALUE_OBJ;
+					s = WAIT_FOR_KEY;
+				}
+				else if (isspace(buf[i]));
+				else
+					return ERR_UNEXPECTED_CHAR;
+				break;
+			case WAIT_FOR_COMMA:
+				if (buf[i] == ',')
+					s = WAIT_FOR_KEY;
+				else if (buf[i] == '}')
+				{
+					layer--;
+					if (layer != 0)
+						root = frames.merge_frames(root);
+				}
+				else if (buf[i] == ']')
+					return ERR_BRACKETS_MISMATCH;
+				else if (isspace(buf[i]));
+				else
+					return ERR_UNEXPECTED_CHAR;
+				break;
+
+				/**************** KEY ****************/
+
+			case KEY:
+				if (buf[i] == '\"')
+					s = WAIT_FOR_COLON;
+				else
+					key += buf[i];
+				break;
+
+				/**************** VALUES ****************/
+
+			case STRING_VALUE:
+				if (buf[i] == '\"')
+				{
+					s = WAIT_FOR_COMMA;
+					root.insert_v(val, key);
+					val.clear();
+				}
+				else
+					val += buf[i];
+				break;
+			case NUMERIC_VALUE:
+				if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+' || buf[i] == 'e' || buf[i] == 'E' || buf[i] == '.')
+					num += buf[i];
+				else if (isspace(buf[i]))
+				{
+					intern::jsonobj value_num;
+					if (intern::convert_numeric(num, value_num) != 0)
+						return -1;
+					root.insert_v(value_num, key);
+					num.clear();
+					key.clear();
+					s = WAIT_FOR_COMMA;
+				}
+				else if (buf[i] == ',')
+				{
+					intern::jsonobj value_num;
+					if (intern::convert_numeric(num, value_num) != 0)
+						return -1;
+					root.insert_v(value_num, key);
+					num.clear();
+					key.clear();
+					s = WAIT_FOR_KEY;
+				}
+				else
+					return ERR_UNEXPECTED_CHAR;
+				break;
+			case KEYWORD_VALUE:
+				if (isspace(buf[i]))
+				{
+					intern::jsonobj value_bool;
+					value_bool.get_type() = types::VALUE_BOOL;
+					if (other == "true")
+						value_bool.get_value_bool() = true;
+					else if (other == "false")
+						value_bool.get_value_bool() = false;
+					else if (other == "null")
+						value_bool.get_type() = types::VALUE_NULL;
+					else
+						return ERR_UNEXPECTED_CHAR;
+					root.insert_v(value_bool, key);
+					key.clear();
+					s = WAIT_FOR_COMMA;
+				}
+				else if (buf[i] == ',')
+				{
+					intern::jsonobj value_bool;
+					value_bool.get_type() = types::VALUE_BOOL;
+					if (other == "true")
+						value_bool.get_value_bool() = true;
+					else if (other == "false")
+						value_bool.get_value_bool() = false;
+					else if (other == "null")
+						value_bool.get_type() = types::VALUE_NULL;
+					else
+						return ERR_UNEXPECTED_CHAR;
+					root.insert_v(value_bool, key);
+					key.clear();
+					other.clear();
+					s = WAIT_FOR_KEY;
+				}
+				else
+					other += buf[i];
+				break;
+
+				/**************** ARRAY WAITS ****************/
+
+			case ARRAY_WAIT_FOR_VALUE:
+				if (buf[i] == '\"')
+					s = ARRAY_STRING_VALUE;
+				else if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+')
+				{
+					s = ARRAY_NUMERIC_VALUE;
+					i--;
+				}
+				else if (buf[i] == '[')
+				{
+					layer++;
+					frames.push_frame(key, root);
+					key.clear();
+					root.clear();
+					root.get_type() = types::VALUE_ARRAY;
+					s = ARRAY_WAIT_FOR_VALUE;
+				}
+				else if (isspace(buf[i]));
+				else
+					return ERR_UNEXPECTED_CHAR;
+				break;
+			case ARRAY_WAIT_FOR_COMMA:
+				if (buf[i] == ',')
+					s = ARRAY_WAIT_FOR_VALUE;
+				else if (buf[i] == ']')
+				{
+					layer--;
+					if (layer != 0)
+						root = frames.merge_frames(root);
+					if (root.get_type() == types::VALUE_ARRAY)
+						s = ARRAY_WAIT_FOR_COMMA;
+					else if (root.get_type() == types::VALUE_OBJ)
+						s = WAIT_FOR_COMMA;
+				}
+				else if (buf[i] == '}')
+					return ERR_BRACKETS_MISMATCH;
+				else if (isspace(buf[i]));
+				else
+					return ERR_UNEXPECTED_CHAR;
+				break;
+
+				/**************** ARRAY VALUES ****************/
+
+			case ARRAY_STRING_VALUE:
+				if (buf[i] == '\"')
+				{
+					s = ARRAY_WAIT_FOR_COMMA;
+					root.insert_v(val, key);
+					val.clear();
+				}
+				else
+					val += buf[i];
+			case ARRAY_NUMERIC_VALUE:
+				if (isdigit(buf[i]) || buf[i] == '-' || buf[i] == '+' || buf[i] == 'e' || buf[i] == 'E' || buf[i] == '.')
+					num += buf[i];
+				else if (isspace(buf[i]))
+				{
+					intern::jsonobj value_num;
+					if (intern::convert_numeric(num, value_num) != 0)
+						return -1;
+					root.insert_v(value_num, key);
+					num.clear();
+					key.clear();
+					s = ARRAY_WAIT_FOR_COMMA;
+				}
+				else if (buf[i] == ',')
+				{
+					intern::jsonobj value_num;
+					if (intern::convert_numeric(num, value_num) != 0)
+						return -1;
+					root.insert_v(value_num, key);
+					num.clear();
+					key.clear();
+					s = ARRAY_WAIT_FOR_VALUE;
+				}
+				break;
+			case ARRAY_KEYWORD_VALUE:
+				if (isspace(buf[i]))
+				{
+					intern::jsonobj value_bool;
+					value_bool.get_type() = types::VALUE_BOOL;
+					if (other == "true")
+						value_bool.get_value_bool() = true;
+					else if (other == "false")
+						value_bool.get_value_bool() = false;
+					else if (other == "null")
+						value_bool.get_type() = types::VALUE_NULL;
+					else
+						return ERR_UNEXPECTED_CHAR;
+					root.insert_v(value_bool, key);
+					key.clear();
+					s = ARRAY_WAIT_FOR_COMMA;
+				}
+				else if (buf[i] == ',')
+				{
+					intern::jsonobj value_bool;
+					value_bool.get_type() = types::VALUE_BOOL;
+					if (other == "true")
+						value_bool.get_value_bool() = true;
+					else if (other == "false")
+						value_bool.get_value_bool() = false;
+					else if (other == "null")
+						value_bool.get_type() = types::VALUE_NULL;
+					else
+						return ERR_UNEXPECTED_CHAR;
+					root.insert_v(value_bool, key);
+					key.clear();
+					other.clear();
+					s = ARRAY_WAIT_FOR_VALUE;
+				}
+				break;
 			}
-
-
-			if (layer != 0)
-				return ERR_BRACKETS_MISMATCH;
-			obj = root;
-			return 0;
+			if (layer == 0)
+				break;
 		}
+
+
+		if (layer != 0)
+			return ERR_BRACKETS_MISMATCH;
+		obj = root;
+		return 0;
 	}
 }

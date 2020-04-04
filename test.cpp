@@ -4,7 +4,7 @@
 #include "json/json.h"
 #include <iostream>
 #include <chrono> 
-using namespace CFP::json;
+using namespace json;
 
 void ptestcase_err(int num, int ret)
 {
@@ -23,7 +23,7 @@ int main()
 	auto start = std::chrono::steady_clock::now();
 	try
 	{
-		CFPjson parser;
+		JSONparser parser;
 		JSONobj obj;
 		int ret;
 
@@ -59,9 +59,12 @@ int main()
 		passed(6);
 
 		ret = parser.deserialize_file("testcase/testcase7.json", obj);
-		if (obj["A"] || obj)
+		if (obj["A"] != true || obj["B"] != false)
+			ptestcase_err(7, ret);
+		passed(7);
+
 	}
-	catch (const CFP::CFP_error & e)
+	catch (const json::json_error & e)
 	{
 		std::cout << "\x1b[31mfailed\x1b[0m: exception thrown with a what of:" << std::endl
 			<< e.what() << std::endl;

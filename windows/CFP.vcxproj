@@ -123,7 +123,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\base\CFPbase.h" />
     <ClInclude Include="..\json\json_obj\json_obj.h" />
     <ClInclude Include="..\json\json_obj\json_obj_internal.h" />
     <ClInclude Include="..\json\json.h" />
