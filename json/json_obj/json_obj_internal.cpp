@@ -80,7 +80,7 @@ namespace json
 				throw json_type_error("requesting a double in a non-double type");
 			return this->value_double;
 		}
-
+		 
 		bool& jsonobj::get_value_bool()
 		{
 			if (this->t != types::VALUE_BOOL)
@@ -130,5 +130,7 @@ namespace json
 			}
 			return 0;
 		}
+
+
 	}
 }

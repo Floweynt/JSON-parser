@@ -62,7 +62,6 @@ int main()
 		if (obj["A"] != true || obj["B"] != false)
 			ptestcase_err(7, ret);
 		passed(7);
-
 	}
 	catch (const json::json_error & e)
 	{

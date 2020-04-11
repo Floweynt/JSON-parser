@@ -25,11 +25,11 @@ namespace json
 		inline bool operator!=(double rhs) { return object.get_value_double() != rhs; }
 		inline bool operator!=(const char* rhs) { return object.get_value_string() != rhs; }
 		inline bool operator!=(bool rhs) { return object.get_value_bool() != rhs; }
+		inline intern::jsonobj get_internal() const { return this->object; }
 
 		JSONobj operator [](const std::string index) { return this->object.get_value_obj()[index]; }
 		JSONobj operator [](const int index) { return this->object.get_value_array()[index]; }
 
 		friend std::ostream& operator<<(std::ostream& os, const JSONobj& out);
-		bool operator ==(JSONobj& rhs);
 	};
 }

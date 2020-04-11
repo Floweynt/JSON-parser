@@ -63,6 +63,9 @@ namespace json
 			double& get_value_double();
 			bool& get_value_bool();
 			void clear();
+
+			jsonobj index_get(size_t index);
+			bool is_end(size_t index);
 		};
 		int convert_numeric(std::string s, jsonobj& j);
 	}

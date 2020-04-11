@@ -38,9 +38,41 @@ public:
 	}
 };
 
+enum states // parser states
+{
+	OBJ,
+
+	WAIT_FOR_KEY,
+	WAIT_FOR_KEY_OBJ,
+	WAIT_FOR_COLON,
+	WAIT_FOR_VALUE,
+	WAIT_FOR_COMMA,
+
+	KEY,
+
+	STRING_VALUE,
+	NUMERIC_VALUE,
+	KEYWORD_VALUE,
+
+	ARRAY_WAIT_FOR_VALUE,
+	ARRAY_WAIT_FOR_COMMA,
+
+	ARRAY_STRING_VALUE,
+	ARRAY_NUMERIC_VALUE,
+	ARRAY_KEYWORD_VALUE
+};
+
+struct iter
+{
+	std::vector<json::intern::jsonobj>::iterator array_iter;
+	std::map<std::string, json::intern::jsonobj>::iterator obj_iter;
+	std::map<std::string, json::intern::jsonobj>::iterator obj_end;
+	json::types type;
+};
+
 namespace json
 {
-	int JSONparser::deserialize_file(std::string filename, JSONobj& obj)
+	int JSONparser::deserialize_file(const std::string &filename, JSONobj& obj)
 	{
 		FILE* fp = fopen(filename.c_str(), "r");
 		if (fp == NULL)
@@ -55,8 +87,9 @@ namespace json
 		fread((void*)buf.c_str(), 1, len, fp);
 
 		return this->deserialize(buf, obj);
+		fclose(fp);
 	}
-	int JSONparser::deserialize(std::string buf, JSONobj& obj)
+	int JSONparser::deserialize(const std::string& buf, JSONobj& obj)
 	{
 		states s = OBJ;
 		size_t layer = 0;
@@ -181,6 +214,7 @@ namespace json
 				{
 					s = WAIT_FOR_COMMA;
 					root.insert_v(val, key);
+					key.clear();
 					val.clear();
 				}
 				else
@@ -372,6 +406,62 @@ namespace json
 		if (layer != 0)
 			return ERR_BRACKETS_MISMATCH;
 		obj = root;
+		return 0;
+	}
+
+	int JSONparser::serialize(std::string& buf, const JSONobj& obj, bool compact, size_t tab)
+	{
+		size_t layer = 1;
+		intern::jsonobj root = obj.get_internal();
+		auto obj_iter = root.get_value_obj().begin();
+		auto end = root.get_value_obj().end()--;
+		std::stack<iter> frames;
+		
+		buf = "{ ";
+		while (true)
+		{
+			if (obj_iter == end && layer == 1)
+				break;
+			else if (obj_iter == end)
+			{
+				iter it = frames.top();
+				frames.pop();
+
+				obj_iter = it.obj_iter;
+				end = it.obj_end;
+
+				buf += " }";
+				layer--;
+				obj_iter++;
+			}
+			
+			switch (obj_iter->second.get_type())
+			{
+			case VALUE_STRING:
+				buf += '\"' + obj_iter->first + "\": " + "\"" + obj_iter->second.get_value_string() + "\"";
+				obj_iter++;
+				if (obj_iter != end)
+					buf += ", ";
+				break;
+			case VALUE_INT:
+				buf += '\"' + obj_iter->first + "\": " + std::to_string(obj_iter->second.get_value_int());
+				obj_iter++;
+				if (obj_iter != end)
+					buf += ", ";
+				break;
+			case VALUE_OBJ:
+				buf += "\"" + obj_iter->first + "\": { ";
+				iter it;
+				it.obj_end = end;
+				it.obj_iter = obj_iter;
+				end = obj_iter->second.get_value_obj().end();
+				obj_iter = obj_iter->second.get_value_obj().begin();
+				frames.push(it);
+				layer++;
+				break;
+			}
+		}
+		buf += " }";
 		return 0;
 	}
 }

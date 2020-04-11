@@ -16,33 +16,11 @@ namespace json
 	};
 	class JSONparser // parser object
 	{
-		enum states // parser states
-		{
-			OBJ,
-
-			WAIT_FOR_KEY,
-			WAIT_FOR_KEY_OBJ,
-			WAIT_FOR_COLON,
-			WAIT_FOR_VALUE,
-			WAIT_FOR_COMMA,
-
-			KEY,
-
-			STRING_VALUE,
-			NUMERIC_VALUE,
-			KEYWORD_VALUE,
-
-			ARRAY_WAIT_FOR_VALUE,
-			ARRAY_WAIT_FOR_COMMA,
-
-			ARRAY_STRING_VALUE,
-			ARRAY_NUMERIC_VALUE,
-			ARRAY_KEYWORD_VALUE
-		};
 
 	public:
-		int deserialize(std::string buf, JSONobj& obj);
-		int deserialize_file(std::string filename, JSONobj& obj);
+		int deserialize(const std::string& buf, JSONobj& obj);
+		int deserialize_file(const std::string& filename, JSONobj& obj);
+		int serialize(std::string& buf, const JSONobj& obj, bool compact = true, size_t tab = 0);
 	};
 }
 #endif
