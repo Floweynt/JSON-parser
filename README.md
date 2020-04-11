@@ -24,6 +24,6 @@ int main()
     // error handling
     return -1;
   }
-  std::cout << obj["Name"]; // get the value of 'Key' and print it
+  std::cout << obj["Name"]; // get the value of 'Name' and print it
 }
 ```
