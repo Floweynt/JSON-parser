@@ -4,7 +4,7 @@ This is a parser for JSON formated files.
 ## Build
 To build this project on linux, use `make lib` to complile. The libary will be located in `objects/json.a`
 ## Examples
-Currently, we only support deserialization.  
+Currently, we only support deserialization and basic serialization(potenally buggy).  
 A basic example is:
 ```c++
 #include "json/json.h"
