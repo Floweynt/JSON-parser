@@ -1,4 +1,4 @@
-# File-parsers
+# JSON parser
 ![C/C++ CI](https://github.com/FloweyTheFlower420/File-parsers/workflows/C/C++%20CI/badge.svg)  
 This is a parser for JSON formated files.
 ## Build
