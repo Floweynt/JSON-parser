@@ -4,6 +4,7 @@
 #include "json_obj.h"
 namespace json
 {
+	const nulljson null{};
 	std::ostream& operator<<(std::ostream& os, const JSONobj& out)
 	{
 		if (((JSONobj)out).object.get_type() == types::VALUE_STRING)

@@ -65,6 +65,7 @@ enum states // parser states
 struct iter
 {
 	std::vector<json::intern::jsonobj>::iterator array_iter;
+	std::vector<json::intern::jsonobj>::iterator array_end;
 	std::map<std::string, json::intern::jsonobj>::iterator obj_iter;
 	std::map<std::string, json::intern::jsonobj>::iterator obj_end;
 	json::types type;
@@ -72,7 +73,7 @@ struct iter
 
 namespace json
 {
-	int JSONparser::deserialize_file(const std::string &filename, JSONobj& obj)
+	int JSONparser::deserialize_file(const std::string& filename, JSONobj& obj)
 	{
 		FILE* fp = fopen(filename.c_str(), "r");
 		if (fp == NULL)
@@ -104,6 +105,7 @@ namespace json
 		std::string val;
 		std::string other;
 		std::string num;
+		bool is_esc = false;
 
 		for (size_t i = 0; i < buf.size(); i++)
 		{
@@ -201,10 +203,40 @@ namespace json
 				/**************** KEY ****************/
 
 			case KEY:
-				if (buf[i] == '\"')
+				if (buf[i] == '\"' && !is_esc)
 					s = WAIT_FOR_COLON;
 				else
-					key += buf[i];
+				{
+					if (is_esc)
+					{
+						switch (buf[i])
+						{
+						case 'b':
+							key += '\b';
+							break;
+						case 'f':
+							key += '\f';
+				 		break;
+						case 'n':
+							key += '\n';
+						case 't':
+							key += '\t';
+							break;
+						case '"':
+							key += '"';
+							break;
+						case '\\':
+							key += '\\';
+						default:
+							return -1;
+						}
+						is_esc = false;
+					}
+					else if (buf[i] == '\\')
+						is_esc = true;
+					else
+						key += buf[i];
+				}
 				break;
 
 				/**************** VALUES ****************/
@@ -413,51 +445,204 @@ namespace json
 	{
 		size_t layer = 1;
 		intern::jsonobj root = obj.get_internal();
+
+		types t = types::VALUE_OBJ;
 		auto obj_iter = root.get_value_obj().begin();
-		auto end = root.get_value_obj().end()--;
+		auto obj_end = root.get_value_obj().end()--;
+		std::vector<json::intern::jsonobj>::iterator array_iter;
+		std::vector<json::intern::jsonobj>::iterator array_end;
+
 		std::stack<iter> frames;
-		
+
 		buf = "{ ";
 		while (true)
 		{
-			if (obj_iter == end && layer == 1)
+			bool is_end;
+			if (t == types::VALUE_ARRAY)
+				is_end = array_iter == array_end;
+			else if (t == types::VALUE_OBJ)
+				is_end = obj_iter == obj_end;
+
+			if (is_end && layer == 1)
 				break;
-			else if (obj_iter == end)
+			else if (is_end)
 			{
 				iter it = frames.top();
 				frames.pop();
 
-				obj_iter = it.obj_iter;
-				end = it.obj_end;
-
-				buf += " }";
+				if (t == VALUE_ARRAY)
+				{
+					if (it.type == types::VALUE_ARRAY)
+					{
+						array_end = it.array_end;
+						array_iter = it.array_iter;
+						array_iter++;
+					}
+					else if (it.type == types::VALUE_OBJ)
+					{
+						obj_end = it.obj_end;
+						obj_iter = it.obj_iter;
+						obj_iter++;
+					}
+					buf += " ]";
+					if (it.type == types::VALUE_ARRAY)
+						buf += array_iter != array_end ? ", " : "";
+					else if (it.type == types::VALUE_OBJ)
+						buf += obj_iter != obj_end ? ", " : "";
+				}
+				else if (it.type == VALUE_OBJ)
+				{
+					if (it.type == types::VALUE_ARRAY)
+					{
+						array_end = it.array_end;
+						array_iter = it.array_iter;
+						array_iter++;
+					}
+					else if (it.type == types::VALUE_OBJ)
+					{
+						obj_end = it.obj_end;
+						obj_iter = it.obj_iter;
+						obj_iter++;
+					}
+					buf += " }";
+					if (it.type == types::VALUE_ARRAY)
+						buf += array_iter != array_end ? ", " : "";
+					else if (it.type == types::VALUE_OBJ)
+						buf += obj_iter != obj_end ? ", " : "";
+				}
+				t = it.type;
 				layer--;
-				obj_iter++;
 			}
-			
-			switch (obj_iter->second.get_type())
+			types s;
+			if (t == VALUE_ARRAY)
+				s = array_iter->get_type();
+			else if (t == VALUE_OBJ)
+				s = obj_iter->second.get_type();
+			switch (s)
 			{
 			case VALUE_STRING:
-				buf += '\"' + obj_iter->first + "\": " + "\"" + obj_iter->second.get_value_string() + "\"";
-				obj_iter++;
-				if (obj_iter != end)
-					buf += ", ";
+				if (t == types::VALUE_OBJ)
+				{
+					buf += '\"' + obj_iter->first + "\": " + "\"" + obj_iter->second.get_value_string() + "\"";
+					obj_iter++;
+					if (obj_iter != obj_end)
+						buf += ", ";
+				}
+				else if (t == types::VALUE_ARRAY)
+				{
+					buf += '\"' + array_iter->get_value_string() + "\"";
+					array_iter++;
+					if (array_iter != array_end)
+						buf += ", ";
+				}
 				break;
 			case VALUE_INT:
-				buf += '\"' + obj_iter->first + "\": " + std::to_string(obj_iter->second.get_value_int());
+				if (t == types::VALUE_OBJ)
+				{
+					buf += '\"' + obj_iter->first + "\": " + std::to_string(obj_iter->second.get_value_int());
+					obj_iter++;
+					if (obj_iter != obj_end)
+						buf += ", ";
+				}
+				else if (t == types::VALUE_ARRAY)
+				{
+					buf += std::to_string(array_iter->get_value_int());
+					array_iter++;
+					if (array_iter != array_end)
+						buf += ", ";
+				}
+				break;
+			case VALUE_DOUBLE:
+				if (t == types::VALUE_OBJ)
+				{
+					buf += '\"' + obj_iter->first + "\": " + std::to_string(obj_iter->second.get_value_double());
+					obj_iter++;
+					if (obj_iter != obj_end)
+						buf += ", ";
+				}
+				else if (t == types::VALUE_ARRAY)
+				{
+					buf += std::to_string(array_iter->get_value_double());
+					array_iter++;
+					if (array_iter != array_end)
+						buf += ", ";
+				}
+				break;
+			case VALUE_BOOL:
+				if (t == types::VALUE_OBJ)
+				{
+					buf += '\"' + obj_iter->first + "\": " + (obj_iter->second.get_value_bool() ? "true" : "false");
+					obj_iter++;
+					if (obj_iter != obj_end)
+						buf += ", ";
+				}
+				else if (t == types::VALUE_ARRAY)
+				{
+					buf += (array_iter->get_value_bool() ? "true" : "false");
+					array_iter++;
+					if (array_iter != array_end)
+						buf += ", ";
+				}
+				break;
+			case VALUE_NULL:
+				// do stuff
+				buf += '\"' + obj_iter->first + "\": null";
 				obj_iter++;
-				if (obj_iter != end)
+				if (obj_iter != obj_end)
 					buf += ", ";
 				break;
 			case VALUE_OBJ:
-				buf += "\"" + obj_iter->first + "\": { ";
-				iter it;
-				it.obj_end = end;
-				it.obj_iter = obj_iter;
-				end = obj_iter->second.get_value_obj().end();
-				obj_iter = obj_iter->second.get_value_obj().begin();
-				frames.push(it);
+				if (t == types::VALUE_OBJ) // is the current object obj?
+				{
+					buf += "\"" + obj_iter->first + "\": { ";
+					iter it;
+					it.obj_end = obj_end;
+					it.obj_iter = obj_iter;
+					it.type = t;
+					obj_end = obj_iter->second.get_value_obj().end();
+					obj_iter = obj_iter->second.get_value_obj().begin();
+					frames.push(it);
+					t = types::VALUE_OBJ;
+				}
+				else if (t == types::VALUE_ARRAY) // is the current object obj?
+				{
+					buf += "{ ";
+					iter it;
+					it.array_end = array_end;
+					it.array_iter = array_iter;
+					it.type = t;
+					obj_end = array_iter->get_value_obj().end();
+					obj_iter = array_iter->get_value_obj().begin();
+					frames.push(it);
+				}
 				layer++;
+				t = types::VALUE_OBJ;
+				break;
+			case VALUE_ARRAY:
+				if (t == types::VALUE_OBJ) // is the current object obj?
+				{
+					buf += "\"" + obj_iter->first + "\": [ "; // add the the starting array string with key
+					iter it;
+					it.obj_end = obj_end;						// push current iterator end
+					it.obj_iter = obj_iter;						// push current iterator
+					it.type = t;								// set type
+					array_end = obj_iter->second.get_value_array().end();
+					array_iter = obj_iter->second.get_value_array().begin();
+					frames.push(it);
+				}
+				else if (t == types::VALUE_ARRAY) // is the current object obj?
+				{
+					buf += "[ "; // add the the starting array string with key
+					iter it;
+					it.array_end = array_end;						// push current iterator end
+					it.array_iter = array_iter;						// push current iterator
+					it.type = t;									// set type
+					array_end = array_iter->get_value_array().end();
+					array_end = array_iter->get_value_array().begin();
+					frames.push(it);
+				}
+				layer++;
+				t = types::VALUE_ARRAY;
 				break;
 			}
 		}

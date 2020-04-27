@@ -62,6 +62,13 @@ int main()
 		if (obj["A"] != true || obj["B"] != false)
 			ptestcase_err(7, ret);
 		passed(7);
+
+		ret = parser.deserialize_file("testcase/testcase9.json", obj);
+
+		ret = parser.deserialize_file("testcase/testcase8.json", obj);
+		std::string a;
+		parser.serialize(a, obj);
+		std::cout << a;
 	}
 	catch (const json::json_error & e)
 	{

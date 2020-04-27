@@ -12,6 +12,9 @@
 
 namespace json
 {
+	struct nulljson {};
+	extern const nulljson null;
+
 	class JSONobj
 	{
 		intern::jsonobj object;
@@ -25,6 +28,7 @@ namespace json
 		inline bool operator!=(double rhs) { return object.get_value_double() != rhs; }
 		inline bool operator!=(const char* rhs) { return object.get_value_string() != rhs; }
 		inline bool operator!=(bool rhs) { return object.get_value_bool() != rhs; }
+		inline bool operator!=(nulljson rhs) { return object.get_type() == types::VALUE_NULL; }
 		inline intern::jsonobj get_internal() const { return this->object; }
 
 		JSONobj operator [](const std::string index) { return this->object.get_value_obj()[index]; }
