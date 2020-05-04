@@ -2,8 +2,10 @@
 // Copyright 2020 Ruiqi Li
 
 #include "json/json.h"
+
 #include <iostream>
 #include <chrono> 
+
 using namespace json;
 
 void ptestcase_err(int num, int ret)
@@ -23,7 +25,7 @@ int main()
 	auto start = std::chrono::steady_clock::now();
 	try
 	{
-		JSONparser parser;
+		JSON parser;
 		JSONobj obj;
 		int ret;
 
@@ -63,12 +65,9 @@ int main()
 			ptestcase_err(7, ret);
 		passed(7);
 
-		ret = parser.deserialize_file("testcase/testcase9.json", obj);
-
 		ret = parser.deserialize_file("testcase/testcase8.json", obj);
-		std::string a;
-		parser.serialize(a, obj);
-		std::cout << a;
+		ret = parser.deserialize_file("testcase/testcase9.json", obj);
+		std::cout << obj;
 	}
 	catch (const json::json_error & e)
 	{
@@ -86,4 +85,4 @@ int main()
 
 	std::cout << "\x1b[36mtime elapsed\x1b[0m: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << "ns" << std::endl;
 	return 0;
-}
+} 

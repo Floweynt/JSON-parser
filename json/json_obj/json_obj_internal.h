@@ -3,6 +3,9 @@
 
 #ifndef __CFP_JSON_OBJECT_INTERNAL_H__
 #define __CFP_JSON_OBJECT_INTERNAL_H__
+
+#include "macros.h"
+
 #include <map>
 #include <vector>
 #include <string>
@@ -38,7 +41,7 @@ namespace json
 	namespace intern // internal class for json object
 	{
 		class jsonobj
-		{
+		{ 
 			std::map<std::string, jsonobj> value_obj;
 			std::vector<jsonobj> value_array;
 			std::string value_string;
@@ -51,6 +54,8 @@ namespace json
 			jsonobj();
 			jsonobj(types type);
 			jsonobj(std::string s);
+			jsonobj(int i);
+			jsonobj(double d);
 
 			void insert_v(jsonobj j, std::string key);
 
@@ -63,9 +68,6 @@ namespace json
 			double& get_value_double();
 			bool& get_value_bool();
 			void clear();
-
-			jsonobj index_get(size_t index);
-			bool is_end(size_t index);
 		};
 		int convert_numeric(std::string s, jsonobj& j);
 	}

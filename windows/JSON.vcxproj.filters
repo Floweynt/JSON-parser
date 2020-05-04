@@ -24,6 +24,12 @@
     <ClInclude Include="..\json\json.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\json\parser\parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\json\json_obj\macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\test.cpp">
@@ -32,10 +38,16 @@
     <ClCompile Include="..\json\json_obj\json_obj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\json\json_obj\json_obj_internal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\json\json.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\json\json_obj\json_obj_internal.cpp">
+    <ClCompile Include="..\json\parser\loads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\json\parser\dumps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

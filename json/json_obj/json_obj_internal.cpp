@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright 2020 Ruiqi Li
 
+#include "macros.h"
 #include "json_obj_internal.h"
+
 namespace json
 {
 	namespace intern
@@ -26,9 +28,18 @@ namespace json
 		{
 			this->t = types::VALUE_STRING;
 			this->value_string = s;
-			this->value_double = 0;
-			this->value_int = 0;
-			this->value_bool = false;
+		}
+
+		jsonobj::jsonobj(int i)
+		{
+			this->t = types::VALUE_INT;
+			this->value_int = 1;
+		}
+
+		jsonobj::jsonobj(double d)
+		{
+			this->t = types::VALUE_DOUBLE;
+			this->value_double = d;
 		}
 
 		void jsonobj::insert_v(jsonobj j, std::string key)

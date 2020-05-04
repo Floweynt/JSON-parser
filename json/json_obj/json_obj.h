@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright 2020 Ruiqi Li
 
+#ifndef __CFP_JSON_OBJ_H__
+#define __CFP_JSON_OBJ_H__
+
 #include "json_obj_internal.h"
+#include "macros.h"
+
 #include <ostream>
 #include <stdexcept>
-
-#ifdef _WIN32
-#pragma warning(disable: 4996) 
-#pragma warning(disable: 26812)
-#endif
 
 namespace json
 {
@@ -22,6 +22,7 @@ namespace json
 	public:
 		inline JSONobj() { }
 		JSONobj(intern::jsonobj o) { this->object = o; }
+		
 		inline operator std::string() { return object.get_value_string(); }
 		inline bool operator!=(std::string& rhs) { return object.get_value_string() != rhs; }
 		inline bool operator!=(int rhs) { return object.get_value_int() != rhs; }
@@ -37,3 +38,4 @@ namespace json
 		friend std::ostream& operator<<(std::ostream& os, const JSONobj& out);
 	};
 }
+#endif
