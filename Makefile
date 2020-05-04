@@ -9,8 +9,12 @@ objects/json_obj.o : json/json_obj/json_obj.cpp | objects json/json_obj/json_obj
 	$(CC) $< -o $@ -c
 objects/json.o : json/json.cpp | objects json/json.h
 	$(CC) $< -o $@ -c
+objects/dumps.o : json/parser/dumps.cpp | json/parser/parser.h
+	$(CC) $< -o $@ -c
+objects/loads.o : json/parser/loads.cpp | json/parser/parser.h
+	$(CC) $< -o $@ -c
 
-objects/json.a : objects/json.o objects/json_obj.o objects/json_obj_internal.o | objects
+objects/json.a : objects/json.o objects/json_obj.o objects/json_obj_internal.o objects/dumps.o objects/loads.o| objects
 	ar rvs $@ $+
 
 objects/example.o : test.cpp | objects
