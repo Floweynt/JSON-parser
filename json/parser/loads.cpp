@@ -67,8 +67,15 @@ namespace json
 {
 	namespace intern
 	{
+		int __dbg;
+		int print_return_line(int line)
+		{
+			std::cout << "return line: " << line << "\n";
+			return 0;
+		}
 		int loads(const std::string& buf, json::intern::jsonobj& obj)
 		{
+
 			states s = OBJ;
 			size_t layer = 0;
 
@@ -81,8 +88,9 @@ namespace json
 
 			for (size_t i = 0; i < buf.size(); i++)
 			{
+				__dbg = i;
 				if (layer == 0 && i != 0)
-					return 0;
+					return print_return_line(__LINE__)? 1: 0;
 				switch (s)
 				{
 				case OBJ:
@@ -100,7 +108,7 @@ namespace json
 						s = KEY;
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_CHAR;
+						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 					break;
 				case WAIT_FOR_KEY_OBJ:
 					if (buf[i] == '\"')
@@ -112,14 +120,14 @@ namespace json
 						return 0;
 					}
 					else
-						return ERR_UNEXPECTED_CHAR;
+						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 					break;
 				case WAIT_FOR_COLON:
 					if (buf[i] == ':')
 						s = WAIT_FOR_VALUE;
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_CHAR;
+						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 					break;
 				case WAIT_FOR_VALUE:
 					if (buf[i] == '\"')
@@ -154,7 +162,7 @@ namespace json
 					}
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_CHAR;
+						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 					break;
 				case WAIT_FOR_COMMA:
 					if (buf[i] == ',')
@@ -170,10 +178,10 @@ namespace json
 							s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ']')
-						return ERR_BRACKETS_MISMATCH;
+						return print_return_line(__LINE__) ? 1 : ERR_BRACKETS_MISMATCH;
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_CHAR;
+						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 					break;
 
 					/**************** KEY ****************/
@@ -251,8 +259,18 @@ namespace json
 						key.clear();
 						s = WAIT_FOR_KEY;
 					}
+					else if (buf[i] == '}')
+					{
+						layer--;
+						if (layer != 0)
+							root = frames.merge_frames(root);
+						if (root.get_type() == types::VALUE_ARRAY)
+							s = ARRAY_WAIT_FOR_COMMA;
+						else if (root.get_type() == types::VALUE_OBJ)
+							s = WAIT_FOR_COMMA;
+					}
 					else
-						return ERR_UNEXPECTED_CHAR;
+						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 					break;
 				case KEYWORD_VALUE:
 					if (isspace(buf[i]))
@@ -282,11 +300,21 @@ namespace json
 						else if (val == "null")
 							value_bool.get_type() = types::VALUE_NULL;
 						else
-							return ERR_UNEXPECTED_CHAR;
+							return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 						root.insert_v(value_bool, key);
 						key.clear();
 						val.clear();
 						s = WAIT_FOR_KEY;
+					}
+					else if (buf[i] == '}')
+					{
+						layer--;
+						if (layer != 0)
+							root = frames.merge_frames(root);
+						if (root.get_type() == types::VALUE_ARRAY)
+							s = ARRAY_WAIT_FOR_COMMA;
+						else if (root.get_type() == types::VALUE_OBJ)
+							s = WAIT_FOR_COMMA;
 					}
 					else
 						val += buf[i];
@@ -322,7 +350,7 @@ namespace json
 					}
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_CHAR;
+						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 					break;
 				case ARRAY_WAIT_FOR_COMMA:
 					if (buf[i] == ',')
@@ -341,7 +369,7 @@ namespace json
 						return ERR_BRACKETS_MISMATCH;
 					else if (isspace(buf[i]));
 					else
-						return ERR_UNEXPECTED_CHAR;
+						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;
 					break;
 
 					/**************** ARRAY VALUES ****************/
@@ -379,6 +407,16 @@ namespace json
 						key.clear();
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
+					else if (buf[i] == ']')
+					{
+						layer--;
+						if (layer != 0)
+							root = frames.merge_frames(root);
+						if (root.get_type() == types::VALUE_ARRAY)
+							s = ARRAY_WAIT_FOR_COMMA;
+						else if (root.get_type() == types::VALUE_OBJ)
+							s = WAIT_FOR_COMMA;
+					}
 					break;
 				case ARRAY_KEYWORD_VALUE:
 					if (isspace(buf[i]))
@@ -414,17 +452,26 @@ namespace json
 						val.clear();
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
+					else if (buf[i] == ']')
+					{
+						layer--;
+						if (layer != 0)
+							root = frames.merge_frames(root);
+						if (root.get_type() == types::VALUE_ARRAY)
+							s = ARRAY_WAIT_FOR_COMMA;
+						else if (root.get_type() == types::VALUE_OBJ)
+							s = WAIT_FOR_COMMA;
+					}
 					break;
 				}
 				if (layer == 0)
 					break;
 			}
 
-
 			if (layer != 0)
-				return ERR_BRACKETS_MISMATCH;
+				return print_return_line(__LINE__) ? 1 : ERR_BRACKETS_MISMATCH;
 			obj = root;
-			return 0;
+			return print_return_line(__LINE__) ? 1 : 0;
 		}
 	}
 }
