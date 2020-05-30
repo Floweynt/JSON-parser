@@ -24,12 +24,25 @@ namespace json
 		JSONobj(intern::jsonobj o) { this->object = o; }
 		
 		inline operator std::string() { return object.get_value_string(); }
-		inline bool operator!=(std::string& rhs) { return object.get_value_string() != rhs; }
+		//inline bool operator!=(std::string& rhs) { return object.get_value_string() != rhs; }
 		inline bool operator!=(int rhs) { return object.get_value_int() != rhs; }
 		inline bool operator!=(double rhs) { return object.get_value_double() != rhs; }
 		inline bool operator!=(const char* rhs) { return object.get_value_string() != rhs; }
 		inline bool operator!=(bool rhs) { return object.get_value_bool() != rhs; }
 		inline bool operator!=(nulljson rhs) { return object.get_type() == types::VALUE_NULL; }
+
+		inline bool operator==(std::string& rhs) { return object.get_value_string() == rhs; }
+		//inline bool operator==(int rhs) { return object.get_value_int() == rhs; }
+		inline bool operator==(double rhs) { return object.get_value_double() == rhs; }
+		inline bool operator==(const char* rhs) { return object.get_value_string() == rhs; }
+		inline bool operator==(bool rhs) { return object.get_value_bool() == rhs; }
+		inline bool operator==(nulljson rhs) { return object.get_type() == types::VALUE_NULL; }
+
+		inline explicit operator std::string() { return object.get_value_string(); }
+		inline explicit operator int() { return object.get_value_int(); }
+		inline explicit operator double() { return object.get_value_double(); }
+		inline explicit operator bool() { return object.get_value_bool(); }
+
 		inline intern::jsonobj get_internal() const { return this->object; }
 
 		JSONobj operator [](const std::string index) { return this->object.get_value_obj()[index]; }

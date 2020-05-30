@@ -74,8 +74,8 @@ int main()
 		passed(6);
 
 		ret = parser.deserialize_file("testcase/testcase7.json", obj);
-		if (obj["A"] != true || 
-			obj["B"] != false ||
+		if (obj["A"]  || 
+			obj["B"]  ||
 			ret != 0
 			)
 			ptestcase_err(7, ret);
