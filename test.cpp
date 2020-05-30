@@ -55,7 +55,7 @@ int main()
 		passed(3);
 
 		ret = parser.deserialize_file("testcase/testcase4.json", obj);
-		if (obj["matrix"][0][0] != 1 || 
+		if (obj["matrix"][0][0] != 1 ||  
 			obj["matrix"][0][1] != 2 || 
 			obj["matrix"][1][1] != 4 || 
 			ret != 0
@@ -98,10 +98,18 @@ int main()
 			)
 			ptestcase_err(10, ret);
 		passed(10);
+
+		ret = parser.deserialize_file("testcase/testcase11.json", obj);
+		if (obj["web-app"]["servlet"][0]["servlet-class"] != "org.cofax.cds.CDSServlet" ||
+			obj["web-app"]["servlet"][0]["init-param"]["templateProcessorClass"] != "org.cofax.WysiwygTemplate" ||
+			ret != 0
+			)
+			ptestcase_err(10, ret);
+		passed(10);
 	}
 	catch (const json::json_error & e)
 	{
-		std::cout << "\x1b[31mfailed\x1b[0m: exce ption thrown with a what of:" << std::endl
+		std::cout << "\x1b[31mfailed\x1b[0m: exception thrown with a what of:" << std::endl
 			<< e.what() << std::endl;
 		return -1;
 	}

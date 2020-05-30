@@ -95,7 +95,7 @@ namespace json
 				{
 				case OBJ:
 					layer++;
-					if (buf[i] != '{')
+					if (buf[i] != '{') 
 						return json::ERR_NO_BASE_OBJ;
 					else
 						s = WAIT_FOR_KEY_OBJ;
@@ -178,7 +178,7 @@ namespace json
 							s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ']')
-						return print_return_line(__LINE__) ? 1 : ERR_BRACKETS_MISMATCH;
+						return print_return_line(__LINE__) ? 1 : ERR_BRACKETS_MISMATCH; 
 					else if (isspace(buf[i]));
 					else
 						return print_return_line(__LINE__) ? 1 : ERR_UNEXPECTED_CHAR;

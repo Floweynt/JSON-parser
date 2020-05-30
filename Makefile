@@ -24,3 +24,6 @@ test : objects/example.o objects/json.a | objects
 	$(CC) $+ -o $@
 lib : objects/json.a
 	@echo "creating statically-linked libary objects/json.a"
+clean:
+	rm -f objects/*
+	rm -f test
