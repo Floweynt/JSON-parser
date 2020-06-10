@@ -74,7 +74,7 @@ int main()
 		passed(6);
 
 		ret = parser.deserialize_file("testcase/testcase7.json", obj);
-		if (obj["A"]  || 
+		if (!obj["A"]  || 
 			obj["B"]  ||
 			ret != 0
 			)
@@ -99,13 +99,13 @@ int main()
 			ptestcase_err(10, ret);
 		passed(10);
 
-		ret = parser.deserialize_file("testcase/testcase11.json", obj);
+		/*ret = parser.deserialize_file("testcase/testcase11.json", obj);
 		if (obj["web-app"]["servlet"][0]["servlet-class"] != "org.cofax.cds.CDSServlet" ||
 			obj["web-app"]["servlet"][0]["init-param"]["templateProcessorClass"] != "org.cofax.WysiwygTemplate" ||
 			ret != 0
 			)
 			ptestcase_err(10, ret);
-		passed(10);
+		passed(10);*/
 	}
 	catch (const json::json_error & e)
 	{
