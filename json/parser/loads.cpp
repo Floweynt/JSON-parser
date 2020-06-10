@@ -88,7 +88,7 @@ namespace json
 				case OBJ:
 					layer++;
 					if (buf[i] != '{') 
-						return ERR_NO_BASE_OBJ;
+						__RETURN__(ERR_NO_BASE_OBJ)
 					else
 						s = WAIT_FOR_KEY_OBJ;
 					break;
@@ -109,7 +109,7 @@ namespace json
 					else if (buf[i] == '}')
 					{
 						obj = root;
-						return 0;
+						__RETURN__(0)
 					}
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
@@ -204,7 +204,7 @@ namespace json
 							case '\\':
 								key += '\\';
 							default:
-								return -1;
+								__RETURN__(ERR_NOT_VALID_ESCAPE);
 							}
 							is_esc = false;
 						}
@@ -235,7 +235,7 @@ namespace json
 					{
 						intern::jsonobj value_num;
 						if (intern::convert_numeric(val, value_num) != 0)
-							return -1;
+							__RETURN__(ERR_NOT_NUM)
 						root.insert_v(value_num, key);
 						val.clear();
 						key.clear();
@@ -245,7 +245,7 @@ namespace json
 					{
 						intern::jsonobj value_num;
 						if (intern::convert_numeric(val, value_num) != 0)
-							return -1;
+							__RETURN__(ERR_NOT_VALID_ESCAPE)
 						root.insert_v(value_num, key);
 						val.clear();
 						key.clear();
@@ -276,7 +276,7 @@ namespace json
 						else if (val == "null")
 							value_bool.get_type() = types::VALUE_NULL;
 						else
-							return ERR_UNEXPECTED_CHAR;
+							__RETURN__(ERR_UNEXPECTED_CHAR)
 						root.insert_v(value_bool, key);
 						key.clear();
 						s = WAIT_FOR_COMMA;
@@ -358,7 +358,7 @@ namespace json
 							s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == '}')
-						return ERR_BRACKETS_MISMATCH;
+						__RETURN__(ERR_BRACKETS_MISMATCH)
 					else if (isspace(buf[i]));
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
@@ -383,7 +383,7 @@ namespace json
 					{
 						intern::jsonobj value_num;
 						if (intern::convert_numeric(val, value_num) != 0)
-							return -1;
+							__RETURN__(ERR_NOT_NUM)
 						root.insert_v(value_num, key);
 						val.clear();
 						key.clear();
@@ -393,7 +393,7 @@ namespace json
 					{
 						intern::jsonobj value_num;
 						if (intern::convert_numeric(val, value_num) != 0)
-							return -1;
+							__RETURN__(ERR_NOT_NUM);
 						root.insert_v(value_num, key);
 						val.clear();
 						key.clear();
@@ -422,7 +422,7 @@ namespace json
 						else if (val == "null")
 							value_bool.get_type() = types::VALUE_NULL;
 						else
-							return ERR_UNEXPECTED_CHAR;
+							__RETURN__(ERR_UNEXPECTED_CHAR)
 						root.insert_v(value_bool, key);
 						key.clear();
 						s = ARRAY_WAIT_FOR_COMMA;
@@ -438,7 +438,7 @@ namespace json
 						else if (val == "null")
 							value_bool.get_type() = types::VALUE_NULL;
 						else
-							return ERR_UNEXPECTED_CHAR;
+							__RETURN__(ERR_UNEXPECTED_CHAR)
 						root.insert_v(value_bool, key);
 						key.clear();
 						val.clear();

@@ -15,7 +15,9 @@ namespace json
 	{
 		ERR_NO_BASE_OBJ = 1,
 		ERR_UNEXPECTED_CHAR,
-		ERR_BRACKETS_MISMATCH
+		ERR_BRACKETS_MISMATCH,
+		ERR_NOT_NUM,
+		ERR_NOT_VALID_ESCAPE
 	};
 	namespace intern
 	{

@@ -15,5 +15,5 @@ constexpr bool IS_DEBUG_CONSTEXPR = true;
 constexpr bool IS_DEBUG_CONSTEXPR = false;
 #endif
 
-#define __RETURN__(code) {if (IS_DEBUG_CONSTEXPR) std::cout << "return line: " << __LINE__; return code; }
+#define __RETURN__(code) {if (IS_DEBUG_CONSTEXPR) std::cout << "return line: " << __LINE__ << '\n'; return code; }
 #endif
