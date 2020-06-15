@@ -8,16 +8,16 @@
 
 using namespace json;
 
-void ptestcase_err(int num, int ret)
+inline void ptestcase_err(int num, int ret)
 {
-	std::cout << "\x1b[31mfailed\x1b[0m: testcase " << num << " fail with return value of: " << ret << std::endl
-		<< "testcase is located in the file testcase/testcase" << num << ".json" << std::endl;
+	//std::cout << "\x1b[31mfailed\x1b[0m: testcase " << num << " fail with return value of: " << ret << std::endl
+		//<< "testcase is located in the file testcase/testcase" << num << ".json" << std::endl;
 	exit(1);
 }
 
-void passed(int testcase)
+inline void passed(int testcase)
 {
-	std::cout << "\x1b[32mpassed\x1b[0m: testcase " << testcase << std::endl;
+	//std::cout << "\x1b[32mpassed\x1b[0m: testcase " << testcase << std::endl;
 }
 
 int main()
@@ -99,13 +99,14 @@ int main()
 			ptestcase_err(10, ret);
 		passed(10);
 
-		/*ret = parser.deserialize_file("testcase/testcase11.json", obj);
-		if (obj["web-app"]["servlet"][0]["servlet-class"] != "org.cofax.cds.CDSServlet" ||
-			obj["web-app"]["servlet"][0]["init-param"]["templateProcessorClass"] != "org.cofax.WysiwygTemplate" ||
+		ret = parser.deserialize_file("testcase/testcase11.json", obj);
+		if (obj["glossary"]["title"] != "example glossary" ||
+			obj["glossary"]["GlossDiv"]["title"] != "S" ||
 			ret != 0
 			)
-			ptestcase_err(10, ret);
-		passed(10);*/
+			ptestcase_err(11, ret);
+		passed(11);
+		while (1);
 	}
 	catch (const json::json_error & e)
 	{
