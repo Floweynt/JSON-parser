@@ -14,7 +14,7 @@ using namespace json;
 using namespace std;
 int main()
 {
-  string json_buffer = "\"Name\": \"Joe\"";
+  string json_buffer = "{\"Name\": \"Joe\"}";
   // parsing
   JSONparser parser;
   JSONobj obj; // stores value
