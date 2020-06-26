@@ -140,7 +140,7 @@ namespace json
 						frames.push_frame(key, root);
 						key.clear();
 						root.clear();
-						root.get_type() = types::VALUE_ARRAY;
+						root.set_type(types::VALUE_ARRAY);
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
 					else if (buf[i] == '{')
@@ -149,7 +149,7 @@ namespace json
 						frames.push_frame(key, root);
 						key.clear();
 						root.clear();
-						root.get_type() = types::VALUE_OBJ;
+						root.set_type(types::VALUE_OBJ);
 						s = WAIT_FOR_KEY;
 					}
 					else if (isspace(buf[i]));
@@ -268,13 +268,13 @@ namespace json
 					if (isspace(buf[i]))
 					{
 						intern::jsonobj value_bool;
-						value_bool.get_type() = types::VALUE_BOOL;
+						value_bool.set_type(types::VALUE_BOOL);
 						if (val == "true")
 							value_bool.get_value_bool() = true;
 						else if (val == "false")
 							value_bool.get_value_bool() = false;
 						else if (val == "null")
-							value_bool.get_type() = types::VALUE_NULL;
+							value_bool.set_type(types::VALUE_NULL);
 						else
 							__RETURN__(ERR_UNEXPECTED_CHAR)
 						root.insert_v(value_bool, key);
@@ -284,13 +284,13 @@ namespace json
 					else if (buf[i] == ',')
 					{
 						intern::jsonobj value_bool;
-						value_bool.get_type() = types::VALUE_BOOL;
+						value_bool.set_type(types::VALUE_BOOL);
 						if (val == "true")
 							value_bool.get_value_bool() = true;
 						else if (val == "false")
 							value_bool.get_value_bool() = false;
 						else if (val == "null")
-							value_bool.get_type() = types::VALUE_NULL;
+							value_bool.set_type(types::VALUE_NULL);
 						else
 							__RETURN__(ERR_UNEXPECTED_CHAR)
 						root.insert_v(value_bool, key);
@@ -328,7 +328,7 @@ namespace json
 						frames.push_frame(key, root);
 						key.clear();
 						root.clear();
-						root.get_type() = types::VALUE_ARRAY;
+						root.set_type(types::VALUE_ARRAY);
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
 					else if (buf[i] == '{')
@@ -337,7 +337,7 @@ namespace json
 						frames.push_frame(key, root);
 						key.clear();
 						root.clear();
-						root.get_type() = types::VALUE_OBJ;
+						root.set_type(types::VALUE_OBJ);
 						s = WAIT_FOR_KEY_OBJ;
 					}
 					else if (isspace(buf[i]));
@@ -414,13 +414,13 @@ namespace json
 					if (isspace(buf[i]))
 					{
 						intern::jsonobj value_bool;
-						value_bool.get_type() = types::VALUE_BOOL;
+						value_bool.set_type(types::VALUE_BOOL);
 						if (val == "true")
 							value_bool.get_value_bool() = true;
 						else if (val == "false")
 							value_bool.get_value_bool() = false;
 						else if (val == "null")
-							value_bool.get_type() = types::VALUE_NULL;
+							value_bool.set_type(types::VALUE_NULL);
 						else
 							__RETURN__(ERR_UNEXPECTED_CHAR)
 						root.insert_v(value_bool, key);
@@ -430,13 +430,13 @@ namespace json
 					else if (buf[i] == ',')
 					{
 						intern::jsonobj value_bool;
-						value_bool.get_type() = types::VALUE_BOOL;
+						value_bool.set_type(types::VALUE_BOOL);
 						if (val == "true")
 							value_bool.get_value_bool() = true;
 						else if (val == "false")
 							value_bool.get_value_bool() = false;
 						else if (val == "null")
-							value_bool.get_type() = types::VALUE_NULL;
+							value_bool.set_type(types::VALUE_NULL);
 						else
 							__RETURN__(ERR_UNEXPECTED_CHAR)
 						root.insert_v(value_bool, key);

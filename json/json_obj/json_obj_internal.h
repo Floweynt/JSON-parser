@@ -40,26 +40,27 @@ namespace json
 
 	namespace intern // internal class for json object
 	{
+		// typedefs
+		class jsonobj;
+		typedef std::vector<jsonobj> json_array;
+		typedef std::map<std::string, jsonobj> json_obj;
+
 		class jsonobj
 		{ 
-			std::map<std::string, jsonobj> value_obj;
-			std::vector<jsonobj> value_array;
-			std::string value_string;
-			int value_int;
-			double value_double;
-			bool value_bool;
-
+			void* to_cxx_object;
 			types t;
 		public:
 			jsonobj();
+			jsonobj(const jsonobj& rhs);
 			jsonobj(types type);
-			jsonobj(std::string s);
+			jsonobj(std::string& s);
 			jsonobj(int i);
 			jsonobj(double d);
 
 			void insert_v(jsonobj j, std::string key);
 
-			inline types& get_type() { return t; }
+			inline types get_type() { return t; }
+			void set_type(types _t);
 
 			std::map<std::string, jsonobj>& get_value_obj();
 			std::string& get_value_string();
@@ -68,6 +69,9 @@ namespace json
 			double& get_value_double();
 			bool& get_value_bool();
 			void clear();
+
+			jsonobj operator= (const jsonobj& rhs);
+			~jsonobj();
 		};
 		int convert_numeric(std::string s, jsonobj& j);
 	}
