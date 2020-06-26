@@ -232,6 +232,7 @@ namespace json
 
 		jsonobj jsonobj::operator= (const jsonobj& rhs)
 		{
+			this->~jsonobj();
 			this->t = rhs.t;
 
 			if (rhs.to_cxx_object)
