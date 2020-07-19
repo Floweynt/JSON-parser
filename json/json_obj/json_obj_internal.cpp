@@ -3,6 +3,7 @@
 
 #include "macros.h"
 #include "json_obj_internal.h"
+#include <iostream>
 
 namespace json
 {
@@ -47,6 +48,14 @@ namespace json
 			}
 			else
 				this->to_cxx_object = nullptr;
+		}
+
+		jsonobj::jsonobj(jsonobj&& rhs)
+		{
+			this->t = rhs.t;
+			this->to_cxx_object = rhs.to_cxx_object;
+			rhs.t = types::VALUE_NULL;
+			rhs.to_cxx_object = nullptr;
 		}
 
 		jsonobj::jsonobj(types type)

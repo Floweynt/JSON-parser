@@ -13,13 +13,13 @@ namespace json
 		if (out.get_internal().get_type() == types::VALUE_OBJ)
 		{
 			std::string buf;
-			intern::dumps(buf, out.get_internal(), true, 0);
+			intern::dumps(buf, out.get_internal(), 0);
 			os << buf;
 		}
 		else if (out.get_internal().get_type() == types::VALUE_ARRAY)
 		{
 			std::string buf;
-			intern::dumps(buf, out.get_internal(), true, 0);
+			intern::dumps(buf, out.get_internal(), 0);
 			os << buf;
 		}
 		else if (out.get_internal().get_type() == types::VALUE_BOOL)

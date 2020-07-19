@@ -52,6 +52,7 @@ namespace json
 		public:
 			jsonobj();
 			jsonobj(const jsonobj& rhs);
+			jsonobj(jsonobj&& rhs);
 			jsonobj(types type);
 			jsonobj(std::string& s);
 			jsonobj(int i);

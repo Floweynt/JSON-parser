@@ -44,29 +44,29 @@ namespace json
 		return this->deserialize(buf, obj);								// parse stream
 	}
 
-	int JSON::serialize(std::string& buf, const JSONobj& obj, bool compact, size_t tab) 
+	int JSON::serialize(std::string& buf, const JSONobj& obj, size_t tab) 
 	{
-		return intern::dumps(buf, obj.get_internal(), compact, tab);
+		return intern::dumps(buf, obj.get_internal(), tab);
 	}
 
-	int JSON::serialize_file(const std::string& filename, const JSONobj& obj, bool compact, size_t tab)
+	int JSON::serialize_file(const std::string& filename, const JSONobj& obj, size_t tab)
 	{
 		FILE* fp = fopen(filename.c_str(), "w");				// open file
 		if (fp == NULL)											// error handling
 			return -1;
 		
 		std::string tmp;
-		int ret =  this->serialize(tmp, obj, compact, tab);		// parse string
+		int ret =  this->serialize(tmp, obj, tab);				// parse string
 
 		fwrite((void*)tmp.c_str(), 1, tmp.size(), fp);
 		fclose(fp);
 		return ret;
 	}
 
-	int JSON::serialize_stream(std::ostream& stream, const JSONobj& obj, bool compact, size_t tab)
+	int JSON::serialize_stream(std::ostream& stream, const JSONobj& obj, size_t tab)
 	{
 		std::string tmp;
-		int ret = this->serialize(tmp, obj, compact, tab);		// parse string
+		int ret = this->serialize(tmp, obj, tab);		// parse string
 		stream << tmp;
 
 		return ret;

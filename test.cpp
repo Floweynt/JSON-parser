@@ -31,11 +31,13 @@ int main()
 
 		ret = parser.deserialize_file("testcase/testcase1.json", obj);
 
-		if (obj["testcase"] != "abc"
+		if (obj["testcase"] != "abc" 
 			|| ret != 0
 			)
 			ptestcase_err(1, ret);
 		passed(1);
+
+		parser.serialize_stream(std::cout, obj, 4);
 
 		ret = parser.deserialize_file("testcase/testcase2.json", obj);
 		if (obj["number"] != 55 ||
@@ -106,6 +108,8 @@ int main()
 			)
 			ptestcase_err(11, ret);
 		passed(11);
+
+		ret = parser.deserialize_file("testcase/testcase12.json", obj);
 	}
 	catch (const json::json_error& e)
 	{

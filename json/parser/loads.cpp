@@ -462,7 +462,7 @@ namespace json
 
 			if (layer != 0)
 				__RETURN__(ERR_BRACKETS_MISMATCH)
-			obj = root;
+			std::swap(root, obj);
 			__RETURN__(0)
 		}
 	}

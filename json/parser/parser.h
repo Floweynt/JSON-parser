@@ -22,7 +22,7 @@ namespace json
 	namespace intern
 	{
 		int loads(const std::string& buf, jsonobj& obj);
-		int dumps(std::string& buf, const jsonobj& obj, bool compact = true, size_t tab = 0);
+		int dumps(std::string& buf, const jsonobj& obj, size_t tab = 0);
 	}
 }
 

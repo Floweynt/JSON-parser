@@ -18,7 +18,12 @@ namespace json
 {
 	namespace intern
 	{
-		int dumps(std::string& buf, const jsonobj& obj, bool compact, size_t tab)
+		static void gspace(std::string& in, const std::string& val, const size_t per, const size_t i)
+		{
+			in += std::string(per * i, ' ') += val + (per ? "\n" : "");
+		}
+
+		int dumps(std::string& buf, const jsonobj& obj, size_t tab)
 		{
 			size_t layer = 1;
 			intern::jsonobj root = obj;
@@ -26,12 +31,18 @@ namespace json
 			if (root.get_type() == VALUE_OBJ)
 			{
 				t = types::VALUE_OBJ;
-				buf = "{ ";
+				if (tab)
+					buf = "{\n";
+				else
+					buf = "{ ";
 			}
 			else if (root.get_type() == VALUE_ARRAY)
 			{
 				t = types::VALUE_ARRAY;
-				buf = "[ ";
+				if (tab)
+					buf = "[\n";
+				else
+					buf = "[ ";
 			}
 			else
 				return -1;
@@ -92,7 +103,11 @@ namespace json
 							obj_iter = it.obj_iter;
 							obj_iter++;
 						}
-						buf += " }";
+						if (tab)
+							buf += "}";
+						else
+							buf += " }";
+
 						if (it.type == types::VALUE_ARRAY)
 							buf += array_iter != array_end ? ", " : "";
 						else if (it.type == types::VALUE_OBJ)
@@ -113,7 +128,7 @@ namespace json
 					case VALUE_STRING:
 						if (t == types::VALUE_OBJ)
 						{
-							buf += '\"' + obj_iter->first + "\": " + "\"" + obj_iter->second.get_value_string() + "\"";
+							gspace(buf, (std::string)"\"" + obj_iter->first + "\": " + "\"" + obj_iter->second.get_value_string() + "\"", tab, layer);
 							obj_iter++;
 							if (obj_iter != obj_end)
 								buf += ", ";
@@ -237,7 +252,20 @@ namespace json
 					}
 				}
 			}
-			buf += " }";
+			if (t == types::VALUE_OBJ)
+			{
+				if (tab)
+					buf += "}";
+				else
+					buf += " }";
+			}
+			else if (t == types::VALUE_ARRAY)
+			{
+				if (tab)
+					buf += "]";
+				else
+					buf += " ]";
+			}
 			return 0;
 		}
 	}
