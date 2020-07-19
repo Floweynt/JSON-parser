@@ -12,7 +12,6 @@ namespace json
 {
 	class JSON // parser object
 	{
-
 	public:
 		int deserialize(const std::string& buf, JSONobj& obj);
 		int deserialize_file(const std::string& filename, JSONobj& obj);
@@ -20,7 +19,6 @@ namespace json
 		int serialize(std::string& buf, const JSONobj& obj, size_t tab = 0);
 		int serialize_file(const std::string& filename, const JSONobj& obj, size_t tab = 0);
 		int serialize_stream(std::ostream& stream, const JSONobj& obj, size_t tab = 0);
-
 	};
 }
 #endif

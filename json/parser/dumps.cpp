@@ -11,7 +11,7 @@ struct iter
 	std::vector<json::intern::jsonobj>::iterator array_end;
 	std::map<std::string, json::intern::jsonobj>::iterator obj_iter;
 	std::map<std::string, json::intern::jsonobj>::iterator obj_end;
-	json::types type;
+	json::types type = json::types::VALUE_NULL;
 };
 
 namespace json

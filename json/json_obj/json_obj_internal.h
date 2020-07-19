@@ -40,29 +40,56 @@ namespace json
 
 	namespace intern // internal class for json object
 	{
-		// typedefs
-		class jsonobj;
-		typedef std::vector<jsonobj> json_array;
-		typedef std::map<std::string, jsonobj> json_obj;
+#ifdef _DEBUG
+		extern int cctorc;
+		extern int eoperc;
+#endif
 
 		class jsonobj
 		{ 
+			// typedefs 
+			typedef std::vector<jsonobj> json_array;
+			typedef std::map<std::string, jsonobj> json_obj;
+
+			// DONT use std::variant, i want this to be cxx11 as much as possible
 			void* to_cxx_object;
 			types t;
 		public:
+			// C++ required ctors: 
+
+			// default ctor
 			jsonobj();
+
+			// copy ctor: copies the type and creates new ptr
 			jsonobj(const jsonobj& rhs);
-			jsonobj(jsonobj&& rhs);
-			jsonobj(types type);
-			jsonobj(std::string& s);
-			jsonobj(int i);
-			jsonobj(double d);
 
-			void insert_v(jsonobj j, std::string key);
+			// move ctor: invalidates rhs, and sets buffer to rhs's buffer
+			jsonobj(jsonobj&& rhs) noexcept;
 
+			// initalize with a types
+			jsonobj(const types type);
+
+			// copy non-json objects
+			jsonobj(const std::string& s);
+			jsonobj(const int i);
+			jsonobj(const double d);
+
+			// given a string, insert a numeric value (can be a integer or double, will determine this later)
+			int insert_numeric(std::string& rhs, std::string& key);
+
+			// insert_v functions: inserts a value into current json object. This is internal, and api will be simpler
+
+			// specializes string insert
+			void insert_v(const std::string& val, const std::string& key);
+
+			// invalidates j, and 'moves' into this
+			void insert_v(jsonobj& j, const std::string& key);
+
+			// we have to specialize type changes (need to delete other types so no memory leaks)
 			inline types get_type() { return t; }
 			void set_type(types _t);
 
+			// obtain referances to internal objects
 			std::map<std::string, jsonobj>& get_value_obj();
 			std::string& get_value_string();
 			std::vector<jsonobj>& get_value_array();
@@ -71,10 +98,12 @@ namespace json
 			bool& get_value_bool();
 			void clear();
 
+			// copy-assignment operator **OPTIMIZE TO NOT USE THIS!**
 			jsonobj operator= (const jsonobj& rhs);
+
+			// custom destructor
 			~jsonobj();
 		};
-		int convert_numeric(std::string s, jsonobj& j);
 	}
 }
 #endif // __CFP_JSON_TREE_INTERNAL_H__

@@ -233,20 +233,18 @@ namespace json
 						val += buf[i];
 					else if (isspace(buf[i]))
 					{
-						intern::jsonobj value_num;
-						if (intern::convert_numeric(val, value_num) != 0)
+						if(root.insert_numeric(val, key))
 							__RETURN__(ERR_NOT_NUM)
-						root.insert_v(value_num, key);
+
 						val.clear();
 						key.clear();
 						s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ',')
 					{
-						intern::jsonobj value_num;
-						if (intern::convert_numeric(val, value_num) != 0)
-							__RETURN__(ERR_NOT_VALID_ESCAPE)
-						root.insert_v(value_num, key);
+						if (root.insert_numeric(val, key))
+							__RETURN__(ERR_NOT_NUM)
+
 						val.clear();
 						key.clear();
 						s = WAIT_FOR_KEY;
@@ -381,20 +379,18 @@ namespace json
 						val += buf[i];
 					else if (isspace(buf[i]))
 					{
-						intern::jsonobj value_num;
-						if (intern::convert_numeric(val, value_num) != 0)
+						if (root.insert_numeric(val, key))
 							__RETURN__(ERR_NOT_NUM)
-						root.insert_v(value_num, key);
+
 						val.clear();
 						key.clear();
 						s = ARRAY_WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ',')
 					{
-						intern::jsonobj value_num;
-						if (intern::convert_numeric(val, value_num) != 0)
-							__RETURN__(ERR_NOT_NUM);
-						root.insert_v(value_num, key);
+						if (root.insert_numeric(val, key))
+							__RETURN__(ERR_NOT_NUM)
+
 						val.clear();
 						key.clear();
 						s = ARRAY_WAIT_FOR_VALUE;

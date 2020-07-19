@@ -7,7 +7,6 @@
 
 namespace json
 {
-	const nulljson null{};
 	std::ostream& operator<<(std::ostream& os, const JSONobj& out)
 	{
 		if (out.get_internal().get_type() == types::VALUE_OBJ)

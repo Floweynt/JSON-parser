@@ -9,6 +9,10 @@ namespace json
 {
 	namespace intern
 	{
+#ifdef _DEBUG
+		int cctorc{ 0 };
+		int eoperc{ 0 };
+#endif
 		jsonobj::jsonobj()
 		{
 			this->t = types::VALUE_NULL;
@@ -17,6 +21,9 @@ namespace json
 
 		jsonobj::jsonobj(const jsonobj& rhs)
 		{
+#ifdef _DEBUG
+			cctorc++;
+#endif
 			this->t = rhs.t;
 
 			if (rhs.to_cxx_object)
@@ -50,7 +57,7 @@ namespace json
 				this->to_cxx_object = nullptr;
 		}
 
-		jsonobj::jsonobj(jsonobj&& rhs)
+		jsonobj::jsonobj(jsonobj&& rhs) noexcept
 		{
 			this->t = rhs.t;
 			this->to_cxx_object = rhs.to_cxx_object;
@@ -58,7 +65,7 @@ namespace json
 			rhs.to_cxx_object = nullptr;
 		}
 
-		jsonobj::jsonobj(types type)
+		jsonobj::jsonobj(const types type)
 		{
 			this->t = type;
 			switch (this->t)
@@ -87,25 +94,91 @@ namespace json
 			}
 		}
 
-		jsonobj::jsonobj(std::string& s)
+		jsonobj::jsonobj(const std::string& s)
 		{
 			this->t = types::VALUE_STRING;
 			this->to_cxx_object = new std::string(s);
 		}
 
-		jsonobj::jsonobj(int i)
+		jsonobj::jsonobj(const int i)
 		{
 			this->t = types::VALUE_INT;
 			this->to_cxx_object = new int(i);
 		}
 
-		jsonobj::jsonobj(double d)
+		jsonobj::jsonobj(const double d)
 		{
 			this->t = types::VALUE_DOUBLE;
 			this->to_cxx_object = new double(d);
 		}
+		
+		int jsonobj::insert_numeric(std::string& s, std::string& key)
+		{
+			double d;
+			try
+			{
+				// we attempt to convert to double
+				d = stod(s);
+			}
+			catch(...)
+			{
+				return -1;
+			}
 
-		void jsonobj::insert_v(jsonobj j, std::string key)
+			if ((d > (double)INT_MAX) || (d < (double)INT_MIN) || trunc(d) != d)
+			{
+				// we can assume that because it is larger than INT_MAX or less than INT_MIN, it is a double
+				// therefore we insert as double
+				// (same code as insert_v)
+				// alse, if we trucate the .xxx part of double, it should only be equal to original value
+				// if and only if d is a int (we already filter out extra large doubles)
+
+				if (this->t == VALUE_ARRAY)
+					((json_array*)this->to_cxx_object)->emplace_back((double)d); // cast to double for sake of consistancy
+				else if (this->t == VALUE_OBJ)
+				{
+					if (((json_obj*)this->to_cxx_object)->find(key) != ((json_obj*)this->to_cxx_object)->end())
+						throw json_type_error("unexpected dupicate key found");
+					(*(json_obj*)this->to_cxx_object).emplace(key, (double)d);
+				}
+				else
+					return -1;
+			}
+			else if (trunc(d) == d)
+			{
+				// if we trucate the .xxx part of double, it should only be equal to original value
+				// if and only if d is a int (we already filter out extra large doubles)
+				if (this->t == VALUE_ARRAY)
+					((json_array*)this->to_cxx_object)->emplace_back((int)d); // cast to int so we insert as a int
+				else if (this->t == VALUE_OBJ)
+				{
+					if (((json_obj*)this->to_cxx_object)->find(key) != ((json_obj*)this->to_cxx_object)->end())
+						throw json_type_error("unexpected dupicate key found");
+					(*(json_obj*)this->to_cxx_object).emplace(key, (int)d);
+				}
+				else
+					return -1;
+			}
+			
+			return 0;
+		}
+
+		void jsonobj::insert_v(const std::string& val, const std::string& key)
+		{
+			if (this->t == VALUE_ARRAY)
+				((json_array*)this->to_cxx_object)->emplace_back(val);
+			else if (this->t == VALUE_OBJ)
+			{
+				if (((json_obj*)this->to_cxx_object)->find(key) != ((json_obj*)this->to_cxx_object)->end())
+					throw json_type_error("unexpected dupicate key found");
+				(*(json_obj*)this->to_cxx_object).emplace(key, val);
+			}
+			else
+				return; // error out here
+			return;
+		}
+
+		void jsonobj::insert_v(jsonobj& j, const std::string& key)
 		{
 			if (this->t == VALUE_ARRAY)
 				((json_array*)this->to_cxx_object)->push_back(j);
@@ -241,6 +314,9 @@ namespace json
 
 		jsonobj jsonobj::operator= (const jsonobj& rhs)
 		{
+#ifdef _DEBUG
+			eoperc++;
+#endif
 			this->~jsonobj();
 			this->t = rhs.t;
 
@@ -304,41 +380,5 @@ namespace json
 				to_cxx_object = nullptr;
 			}
 		}
-
-		int convert_numeric(std::string s, jsonobj& j)
-		{
-			bool t;
-			double d;
-			int i;
-			if (s.find('.') != std::string::npos)
-			{
-				try
-				{
-					d = stod(s);
-				}
-				catch (...)
-				{
-					return -1;
-				}
-				j.set_type(types::VALUE_DOUBLE);
-				j.get_value_double() = d;
-			}
-			else
-			{
-				try
-				{
-					i = stoi(s);
-				}
-				catch (...)
-				{
-					return -1;
-				}
-				j.set_type(types::VALUE_INT);
-				j.get_value_int() = i;
-			}
-			return 0;
-		}
-
-
 	}
 }

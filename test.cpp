@@ -20,6 +20,8 @@ inline void passed(int testcase)
 	 std::cout << "\x1b[32mpassed\x1b[0m: testcase " << testcase << std::endl;
 }
 
+//#define PRINT_EXIT
+
 int main()
 {
 	auto start = std::chrono::steady_clock::now();
@@ -37,7 +39,7 @@ int main()
 			ptestcase_err(1, ret);
 		passed(1);
 
-		parser.serialize_stream(std::cout, obj, 4);
+		//parser.serialize_stream(std::cout, obj, 4);
 
 		ret = parser.deserialize_file("testcase/testcase2.json", obj);
 		if (obj["number"] != 55 ||
@@ -108,7 +110,9 @@ int main()
 			)
 			ptestcase_err(11, ret);
 		passed(11);
-
+#ifdef _DEBUG
+		std::cout << "COPY CTOR CALLS: " << json::intern::cctorc << ", COPY OPER CALLS: " << json::intern::eoperc;
+#endif
 		ret = parser.deserialize_file("testcase/testcase12.json", obj);
 	}
 	catch (const json::json_error& e)

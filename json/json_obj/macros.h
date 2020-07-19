@@ -9,7 +9,7 @@
 #endif
 
 
-#ifdef _DEBUG
+#ifdef PRINT_EXIT
 constexpr bool IS_DEBUG_CONSTEXPR = true;
 #else
 constexpr bool IS_DEBUG_CONSTEXPR = false;

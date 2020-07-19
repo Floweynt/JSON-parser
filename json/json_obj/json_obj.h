@@ -13,7 +13,7 @@
 namespace json
 {
 	struct nulljson {};
-	extern const nulljson null;
+	constexpr nulljson null;
 
 	class JSONobj
 	{
