@@ -13,7 +13,7 @@ namespace json
 	{
 		intern::jsonobj myobj;
 		int ret = intern::loads(buf, myobj);
-		obj = myobj;
+		obj.copy_from_internal(myobj);
 		return ret;
 	}
 

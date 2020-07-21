@@ -17,12 +17,12 @@ class parse_frame
 	std::stack<pack> frames;
 public:
 
-	json::intern::jsonobj merge_frames(json::intern::jsonobj j)
+	void merge_frames(json::intern::jsonobj& j)
 	{
 		pack p = frames.top();
 		p.o.insert_v(j, p.key);
 		frames.pop();
-		return p.o;
+		std::swap(j, p.o);
 	}
 
 	void push_frame(std::string key, json::intern::jsonobj o)
@@ -163,7 +163,7 @@ namespace json
 					{
 						layer--;
 						if (layer != 0)
-							root = frames.merge_frames(root);
+							frames.merge_frames(root);
 						if (root.get_type() == types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
 						else if (root.get_type() == types::VALUE_OBJ)
@@ -253,7 +253,7 @@ namespace json
 					{
 						layer--;
 						if (layer != 0)
-							root = frames.merge_frames(root);
+							frames.merge_frames(root);
 						if (root.get_type() == types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
 						else if (root.get_type() == types::VALUE_OBJ)
@@ -300,7 +300,7 @@ namespace json
 					{
 						layer--;
 						if (layer != 0)
-							root = frames.merge_frames(root);
+							frames.merge_frames(root);
 						if (root.get_type() == types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
 						else if (root.get_type() == types::VALUE_OBJ)
@@ -349,7 +349,7 @@ namespace json
 					{
 						layer--;
 						if (layer != 0)
-							root = frames.merge_frames(root);
+							frames.merge_frames(root);
 						if (root.get_type() == types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
 						else if (root.get_type() == types::VALUE_OBJ)
@@ -399,7 +399,7 @@ namespace json
 					{
 						layer--;
 						if (layer != 0)
-							root = frames.merge_frames(root);
+							frames.merge_frames(root);
 						if (root.get_type() == types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
 						else if (root.get_type() == types::VALUE_OBJ)
@@ -444,7 +444,7 @@ namespace json
 					{
 						layer--;
 						if (layer != 0)
-							root = frames.merge_frames(root);
+							frames.merge_frames(root);
 						if (root.get_type() == types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
 						else if (root.get_type() == types::VALUE_OBJ)

@@ -4,6 +4,8 @@
 #include "macros.h"
 #include "json_obj_internal.h"
 #include <iostream>
+#include <climits>
+#include <cmath>
 
 namespace json
 {

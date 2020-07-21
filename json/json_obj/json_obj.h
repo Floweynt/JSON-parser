@@ -21,7 +21,8 @@ namespace json
 
 	public:
 		inline JSONobj() { }
-		JSONobj(intern::jsonobj o) { this->object = o; }
+		inline JSONobj(intern::jsonobj& o) { object = o; }
+		inline void copy_from_internal(intern::jsonobj& o) { std::swap(o, object); }
 		
 		inline bool operator!=(std::string& rhs) { return object.get_value_string() != rhs; }
 		inline bool operator!=(int rhs) { return object.get_value_int() != rhs; }

@@ -10,14 +10,14 @@ using namespace json;
 
 inline void ptestcase_err(int num, int ret)
 {
-	std::cout << "\x1b[31mfailed\x1b[0m: testcase " << num << " fail with return value of: " << ret << std::endl
-		<< "testcase is located in the file testcase/testcase" << num << ".json" << std::endl;
+	/*std::cout << "\x1b[31mfailed\x1b[0m: testcase " << num << " fail with return value of: " << ret << std::endl
+		<< "testcase is located in the file testcase/testcase" << num << ".json" << std::endl;*/
 	exit(1);
 }
 
 inline void passed(int testcase)
 {
-	 std::cout << "\x1b[32mpassed\x1b[0m: testcase " << testcase << std::endl;
+	 //std::cout << "\x1b[32mpassed\x1b[0m: testcase " << testcase << std::endl;
 }
 
 //#define PRINT_EXIT
@@ -33,7 +33,7 @@ int main()
 
 		ret = parser.deserialize_file("testcase/testcase1.json", obj);
 
-		if (obj["testcase"] != "abc" 
+		if (obj["testcase"] != "abc"
 			|| ret != 0
 			)
 			ptestcase_err(1, ret);
