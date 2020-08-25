@@ -1,93 +1,128 @@
-// SPDX-License-Identifier: MIT
-// Copyright 2020 Ruiqi Li
-
-#include "parser.h"
+#include "../json.h"
 #include <stack>
-
-#include "../json_obj/macros.h"
-
-struct pack
-{
-	json::intern::jsonobj o;
-	std::string key;
-};
-
-class parse_frame
-{
-	std::stack<pack> frames;
-public:
-
-	void merge_frames(json::intern::jsonobj& j)
-	{
-		pack p = frames.top();
-		p.o.insert_v(j, p.key);
-		frames.pop();
-		std::swap(j, p.o);
-	}
-
-	void push_frame(std::string key, json::intern::jsonobj o)
-	{
-		pack p;
-		p.o = o;
-		p.key = key;
-		frames.push(p);
-	}
-
-	json::intern::jsonobj top()
-	{
-		return this->frames.top().o;
-	}
-};
-
-enum states // parser states
-{
-	OBJ,
-
-	WAIT_FOR_KEY,
-	WAIT_FOR_KEY_OBJ,
-	WAIT_FOR_COLON,
-	WAIT_FOR_VALUE,
-	WAIT_FOR_COMMA,
-
-	KEY,
-
-	STRING_VALUE,
-	NUMERIC_VALUE,
-	KEYWORD_VALUE,
-
-	ARRAY_WAIT_FOR_VALUE,
-	ARRAY_WAIT_FOR_COMMA,
-
-	ARRAY_STRING_VALUE,
-	ARRAY_NUMERIC_VALUE,
-	ARRAY_KEYWORD_VALUE
-};
+#include <cmath>
+#include <string>
 
 namespace json
 {
-	namespace intern
+	struct pack
 	{
-		int loads(const std::string& buf, json::intern::jsonobj& obj)
+		json::JSONobj o;
+		std::string key;
+	};
+
+	enum states // parser states
+	{
+		OBJ,
+
+		WAIT_FOR_KEY,
+		WAIT_FOR_KEY_OBJ,
+		WAIT_FOR_COLON,
+		WAIT_FOR_VALUE,
+		WAIT_FOR_COMMA,
+
+		KEY,
+
+		STRING_VALUE,
+		NUMERIC_VALUE,
+		KEYWORD_VALUE,
+
+		ARRAY_WAIT_FOR_VALUE,
+		ARRAY_WAIT_FOR_COMMA,
+
+		ARRAY_STRING_VALUE,
+		ARRAY_NUMERIC_VALUE,
+		ARRAY_KEYWORD_VALUE
+	};
+
+	int insert_numeric_implicit(const std::string& str, const std::string& key, JSONobj& obj)
+	{
+		if (obj.is_array() || obj.is_object())
+			return -1;
+
+		double d;
+		try
 		{
-			states s = OBJ;
-			size_t layer = 0;
+			d = std::stod(str);
+		}
+		catch (...)
+		{
+			return 1;
+		}
 
-			parse_frame frames;
-			json::intern::jsonobj root(json::types::VALUE_OBJ);
-
-			std::string key;
-			std::string val;
-			bool is_esc = false;
-
-			for (size_t i = 0; i < buf.size(); i++)
+		if (str.find('.') != std::string::npos)
+		{
+			if (obj.is_object())
+				obj.push_back(std::make_pair(key, (double)d));
+			else if (obj.is_array())
+				obj.push_back((double)d);
+		}
+		if (trunc(d) == d)
+		{
+			if (d > INT_MIN && d < INT_MAX)
 			{
-				if (layer == 0 && i != 0)
-					__RETURN__ (0)
+				if (obj.is_object())
+					obj.push_back(std::make_pair(key, (int)d));
+				else if (obj.is_array())
+					obj.push_back((int)d);
+			}
+			else
+			{
+				if (obj.is_object())
+					obj.push_back(std::make_pair(key, (double)d));
+				else if (obj.is_array())
+					obj.push_back((double)d);
+			}
+		}
+		return 0;
+	}
+
+	class parse_frame
+	{
+		std::stack<pack> frames;
+	public:
+
+		void merge_frames(json::JSONobj& j)
+		{
+			// we first move the top to a temp buffer
+			pack p(std::move(frames.top()));
+			// remove top of frames
+			frames.pop();
+
+			std::swap(p.o[p.key], j);
+			std::swap(j, p.o);
+		}
+
+		void push_frame(const std::string& key, json::JSONobj& o)
+		{
+			frames.emplace(std::move(o), key);
+			// destorying a JSONobj sets it to null type, but we use a interface
+			o.nullify();
+		}
+	};
+
+	int JSONobj::loads(const std::string& buf)
+	{
+		states s = OBJ;
+		size_t layer = 0;
+
+		parse_frame frames;
+		JSONobj root;
+
+		std::string key;
+		std::string val;
+
+		bool is_esc = false;
+
+		for (size_t i = 0; i < buf.size(); i++)
+		{
+			if (layer == 0 && i != 0)
+				__RETURN__(0)
 				switch (s)
 				{
 				case OBJ:
 					layer++;
-					if (buf[i] != '{') 
+					if (buf[i] != '{')
 						__RETURN__(ERR_NO_BASE_OBJ)
 					else
 						s = WAIT_FOR_KEY_OBJ;
@@ -101,26 +136,26 @@ namespace json
 					else if (isspace(buf[i]));
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
-					break;
+						break;
 				case WAIT_FOR_KEY_OBJ:
 					if (buf[i] == '\"')
 						s = KEY;
 					else if (isspace(buf[i]));
 					else if (buf[i] == '}')
 					{
-						obj = root;
+						std::swap(*this, root);
 						__RETURN__(0)
 					}
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
-					break;
+						break;
 				case WAIT_FOR_COLON:
 					if (buf[i] == ':')
 						s = WAIT_FOR_VALUE;
 					else if (isspace(buf[i]));
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
-					break;
+						break;
 				case WAIT_FOR_VALUE:
 					if (buf[i] == '\"')
 						s = STRING_VALUE;
@@ -139,7 +174,6 @@ namespace json
 						layer++;
 						frames.push_frame(key, root);
 						key.clear();
-						root.clear();
 						root.set_type(types::VALUE_ARRAY);
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
@@ -148,14 +182,13 @@ namespace json
 						layer++;
 						frames.push_frame(key, root);
 						key.clear();
-						root.clear();
 						root.set_type(types::VALUE_OBJ);
 						s = WAIT_FOR_KEY;
 					}
 					else if (isspace(buf[i]));
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
-					break;
+						break;
 				case WAIT_FOR_COMMA:
 					if (buf[i] == ',')
 						s = WAIT_FOR_KEY;
@@ -174,7 +207,7 @@ namespace json
 					else if (isspace(buf[i]));
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
-					break;
+						break;
 
 					/**************** KEY ****************/
 
@@ -221,7 +254,7 @@ namespace json
 					if (buf[i] == '\"')
 					{
 						s = WAIT_FOR_COMMA;
-						root.insert_v(val, key);
+						root.push_back(std::make_pair(val, key));
 						key.clear();
 						val.clear();
 					}
@@ -233,7 +266,7 @@ namespace json
 						val += buf[i];
 					else if (isspace(buf[i]))
 					{
-						if(root.insert_numeric(val, key))
+						if (insert_numeric_implicit(val, key, root))
 							__RETURN__(ERR_NOT_NUM)
 
 						val.clear();
@@ -242,7 +275,7 @@ namespace json
 					}
 					else if (buf[i] == ',')
 					{
-						if (root.insert_numeric(val, key))
+						if (insert_numeric_implicit(val, key, root))
 							__RETURN__(ERR_NOT_NUM)
 
 						val.clear();
@@ -261,39 +294,32 @@ namespace json
 					}
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
-					break;
+						break;
 				case KEYWORD_VALUE:
 					if (isspace(buf[i]))
 					{
-						intern::jsonobj value_bool;
-						value_bool.set_type(types::VALUE_BOOL);
 						if (val == "true")
-							value_bool.get_value_bool() = true;
+							root.push_back(std::make_pair(key, (json_bool)true));
 						else if (val == "false")
-							value_bool.get_value_bool() = false;
-						else if (val == "null")
-							value_bool.set_type(types::VALUE_NULL);
+							root.push_back(std::make_pair(key, (json_bool)true));
+						else if (val == "null");
+						// we uh, actually dont do anything
 						else
-							__RETURN__(ERR_UNEXPECTED_CHAR)
-						root.insert_v(value_bool, key);
+							__RETURN__(ERR_UNEXPECTED_CHAR);
 						key.clear();
 						s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ',')
 					{
-						intern::jsonobj value_bool;
-						value_bool.set_type(types::VALUE_BOOL);
 						if (val == "true")
-							value_bool.get_value_bool() = true;
+							root.push_back(std::make_pair(key, (json_bool)true));
 						else if (val == "false")
-							value_bool.get_value_bool() = false;
-						else if (val == "null")
-							value_bool.set_type(types::VALUE_NULL);
+							root.push_back(std::make_pair(key, (json_bool)true));
+						else if (val == "null");
+						// we uh, actually dont do anything
 						else
-							__RETURN__(ERR_UNEXPECTED_CHAR)
-						root.insert_v(value_bool, key);
+							__RETURN__(ERR_UNEXPECTED_CHAR);
 						key.clear();
-						val.clear();
 						s = WAIT_FOR_KEY;
 					}
 					else if (buf[i] == '}')
@@ -324,8 +350,6 @@ namespace json
 					{
 						layer++;
 						frames.push_frame(key, root);
-						key.clear();
-						root.clear();
 						root.set_type(types::VALUE_ARRAY);
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
@@ -333,15 +357,13 @@ namespace json
 					{
 						layer++;
 						frames.push_frame(key, root);
-						key.clear();
-						root.clear();
 						root.set_type(types::VALUE_OBJ);
 						s = WAIT_FOR_KEY_OBJ;
 					}
 					else if (isspace(buf[i]));
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
-					break;
+						break;
 				case ARRAY_WAIT_FOR_COMMA:
 					if (buf[i] == ',')
 						s = ARRAY_WAIT_FOR_VALUE;
@@ -360,7 +382,7 @@ namespace json
 					else if (isspace(buf[i]));
 					else
 						__RETURN__(ERR_UNEXPECTED_CHAR)
-					break;
+						break;
 
 					/**************** ARRAY VALUES ****************/
 
@@ -368,7 +390,7 @@ namespace json
 					if (buf[i] == '\"')
 					{
 						s = ARRAY_WAIT_FOR_COMMA;
-						root.insert_v(val, key);
+						root.push_back(key);
 						val.clear();
 					}
 					else
@@ -379,20 +401,18 @@ namespace json
 						val += buf[i];
 					else if (isspace(buf[i]))
 					{
-						if (root.insert_numeric(val, key))
+						if (insert_numeric_implicit(val, key, root))
 							__RETURN__(ERR_NOT_NUM)
 
 						val.clear();
-						key.clear();
 						s = ARRAY_WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ',')
 					{
-						if (root.insert_numeric(val, key))
+						if (insert_numeric_implicit(val, key, root))
 							__RETURN__(ERR_NOT_NUM)
 
 						val.clear();
-						key.clear();
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
 					else if (buf[i] == ']')
@@ -409,35 +429,30 @@ namespace json
 				case ARRAY_KEYWORD_VALUE:
 					if (isspace(buf[i]))
 					{
-						intern::jsonobj value_bool;
-						value_bool.set_type(types::VALUE_BOOL);
 						if (val == "true")
-							value_bool.get_value_bool() = true;
+							root.push_back(std::make_pair(key, (json_bool)true));
 						else if (val == "false")
-							value_bool.get_value_bool() = false;
-						else if (val == "null")
-							value_bool.set_type(types::VALUE_NULL);
+							root.push_back(std::make_pair(key, (json_bool)true));
+						else if (val == "null");
+						// we uh, actually dont do anything
 						else
-							__RETURN__(ERR_UNEXPECTED_CHAR)
-						root.insert_v(value_bool, key);
-						key.clear();
+							__RETURN__(ERR_UNEXPECTED_CHAR);
+						val.clear();
+
 						s = ARRAY_WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ',')
 					{
-						intern::jsonobj value_bool;
-						value_bool.set_type(types::VALUE_BOOL);
 						if (val == "true")
-							value_bool.get_value_bool() = true;
+							root.push_back(std::make_pair(key, (json_bool)true));
 						else if (val == "false")
-							value_bool.get_value_bool() = false;
-						else if (val == "null")
-							value_bool.set_type(types::VALUE_NULL);
+							root.push_back(std::make_pair(key, (json_bool)true));
+						else if (val == "null");
+						// we uh, actually dont do anything
 						else
-							__RETURN__(ERR_UNEXPECTED_CHAR)
-						root.insert_v(value_bool, key);
-						key.clear();
+							__RETURN__(ERR_UNEXPECTED_CHAR);
 						val.clear();
+
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
 					else if (buf[i] == ']')
@@ -452,14 +467,13 @@ namespace json
 					}
 					break;
 				}
-				if (layer == 0)
-					break;
-			}
-
-			if (layer != 0)
-				__RETURN__(ERR_BRACKETS_MISMATCH)
-			std::swap(root, obj);
-			__RETURN__(0)
+			if (layer == 0)
+				break;
 		}
+
+		if (layer != 0)
+			__RETURN__(ERR_BRACKETS_MISMATCH)
+			std::swap(*this, root);
+		__RETURN__(0)
 	}
 }
