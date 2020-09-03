@@ -40,6 +40,7 @@ namespace json
 
 	class JSONobj
 	{
+		// should use std::variant, but C++17 bad
 		void* to_value;
 		types t;
 
@@ -92,12 +93,23 @@ namespace json
 		// construct string
 		JSONobj(const std::string& init);
 
-		// element access
+		/******** element access ********/
+
+		// will throw exception when done primitives, or if you use incorrect key
 		inline reference at(const json_obj::key_type& key) { return this->get_object()[key]; }
 		inline reference at(const json_array::size_type index) { return this->get_array()[index]; }
 
 		inline reference operator [](const json_obj::key_type key) { return this->at(key); }
 		inline reference operator [](const size_type index) { return this->at(index); }
+
+		// on primitives, returns that, on objects/arrays, does behavior specified by the stl
+		inline reference front() {}
+		inline reference back() {};
+
+		// size
+
+		// empty attemps to get size of internal stl object, however primitives will return false
+		bool empty();
 
 		// modifiers
 
@@ -135,8 +147,8 @@ namespace json
 		int dumps(std::string& buf);
 		int loads_file(const std::string& fname);
 		int dumps_file(const std::string& fname);
-		int loads_stream(std::istream& str);
-		int dumps_stream(std::ostream& str);
+		int loads_stream(std::istream& stream);
+		int dumps_stream(std::ostream& st);
 
 		// operators
 
@@ -146,7 +158,7 @@ namespace json
 
 		/*inline bool operator!=(std::string& rhs) { return object.get_value_string() != rhs; }
 		inline bool operator!=(int rhs) { return object.get_value_int() != rhs; }*
-		inline bool operator!=(double rhs) { return object.get_value_double() != rhs; }
+		inline bool operator!=(double rhs) { return object.get_value_double() != rhs; }	
 		inline bool operator!=(const char* rhs) { return object.get_value_string() != rhs; }
 		inline bool operator!=(bool rhs) { return object.get_value_bool() != rhs; }
 		inline bool operator!=(nulljson rhs) { return object.get_type() == types::VALUE_NULL; }
