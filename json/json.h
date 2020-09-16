@@ -27,28 +27,96 @@ namespace json
 		json_type_error(const char* p) : json_error(p) {};
 	};
 
-	enum types // json types
+	class JSONobj_iterator : std::iterator < std::forward_iterator_tag, JSONobj, size_t>
 	{
-		VALUE_OBJ,
-		VALUE_ARRAY,
-		VALUE_STRING,
-		VALUE_INT,
-		VALUE_DOUBLE,
-		VALUE_BOOL,
-		VALUE_NULL,
+	public:
+		enum json_iterator_types
+		{
+			VALUE_OBJ,
+			VALUE_ARRAY
+		};
+
+	private:
+		JSONobj::json_array::iterator it_array;
+		JSONobj::json_obj::iterator it_obj;
+		json_iterator_types t;
+
+	public:
+		// some of the STL iterator typedefs
+		typedef JSONobj::value_type value_type;
+		typedef JSONobj::size_type difference_type;
+		typedef value_type& reference;
+
+		JSONobj_iterator(JSONobj::json_array::iterator& _it_array)
+		{
+			this->t = json_iterator_types::VALUE_ARRAY;
+			this->it_array = _it_array;
+		}
+
+		// prefix ++ operator
+		JSONobj_iterator& operator++()
+		{
+			switch (t)
+			{
+			case json::JSONobj_iterator::VALUE_OBJ:
+				return; // increment
+			case json::JSONobj_iterator::VALUE_ARRAY:
+				return; // increment
+			default:
+				break;
+			}
+		}
+
+		// suffix ++ operator
+		JSONobj_iterator& operator++(int) 
+		{
+			switch (t)
+			{
+			case json::JSONobj_iterator::VALUE_OBJ:
+				return; // increment
+			case json::JSONobj_iterator::VALUE_ARRAY:
+				return; // increment
+			default:
+				break;
+			}
+		}
+
+		std::string key()
+		{
+
+		}
+
+		// dereferance operator
+		reference operator*()
+		{
+
+		}
 	};
 
 	class JSONobj
 	{
+		enum json_types // json types
+		{
+			VALUE_OBJ,
+			VALUE_ARRAY,
+			VALUE_STRING,
+			VALUE_INT,
+			VALUE_DOUBLE,
+			VALUE_BOOL,
+			VALUE_NULL,
+		};
+
 		// should use std::variant, but C++17 bad
 		void* to_value;
-		types t;
+		json_types t;
 
 	public:
+		// some of the STL container typedefs
 		typedef JSONobj value_type;
 		typedef value_type& reference;
 		typedef const reference const_reference;
 		typedef size_t size_type;
+		typedef JSONobj_iterator iterator;
 		 
 		typedef std::vector<JSONobj> json_array;
 		typedef bool json_bool;
@@ -71,12 +139,10 @@ namespace json
 		inline JSONobj() { this->nullify(); }
 		JSONobj(const JSONobj& rhs);		// initalize via copy
 		JSONobj(JSONobj&& rhs) noexcept;	// initalize via move
-		JSONobj(types t);					// initalize w/ type
+		JSONobj(json_types t);					// initalize w/ type
 
 		// custom destructor
 		~JSONobj();
-
-		// construct with STL containers / c++ types
 
 		// consturct array
 		//JSONobj(const std::vector<)
@@ -93,7 +159,14 @@ namespace json
 		// construct string
 		JSONobj(const std::string& init);
 
-		/******** element access ********/
+		iterator begin();
+		iterator end();
+
+		json_obj& get_object();
+		json_array& get_array();
+		json_string& get_string();
+		json_float& get_float();
+		json_int& get_int();
 
 		// will throw exception when done primitives, or if you use incorrect key
 		inline reference at(const json_obj::key_type& key) { return this->get_object()[key]; }
@@ -104,47 +177,36 @@ namespace json
 
 		// on primitives, returns that, on objects/arrays, does behavior specified by the stl
 		inline reference front() {}
-		inline reference back() {};
+		inline reference back() {}
 
-		// size
-
-		// empty attemps to get size of internal stl object, however primitives will return false
+		// empty attemps to get size of internal stl object, however primitives will return true
 		bool empty();
 
-		// modifiers
+		// returns -1 on primitives
+		size_type size();
 
 		void push_back(const json_obj::value_type& val);
 		void push_back(const json_array::value_type& val);
-
-		// basic get operations
-		// we are not going to use template for right now
-
-		json_obj& get_object();
-		json_array& get_array();
-		json_string& get_string();
-		json_float& get_float();
-		json_int& get_int();
 
 		// type operations
 
 		void nullify();
 
-		void set_type(types t);
-		inline types get_type() const { return this->t; }
+		void set_type(json_types t);
+		inline json_types get_type() const { return this->t; }
 
-		inline bool is_array() const { return this->t == types::VALUE_ARRAY; }
-		inline bool is_bool() const { return this->t == types::VALUE_BOOL; }
-		inline bool is_float() const { return this->t == types::VALUE_DOUBLE; }
-		inline bool is_int() const { return this->t == types::VALUE_INT; }
-		inline bool is_null() const { return this->t == types::VALUE_NULL; }
-		inline bool is_object() const { return this->t == types::VALUE_OBJ; }
-		inline bool is_string() const { return this->t == types::VALUE_STRING; }
-
+		inline bool is_array() const { return this->t == json_types::VALUE_ARRAY; }
+		inline bool is_bool() const { return this->t == json_types::VALUE_BOOL; }
+		inline bool is_float() const { return this->t == json_types::VALUE_DOUBLE; }
+		inline bool is_int() const { return this->t == json_types::VALUE_INT; }
+		inline bool is_null() const { return this->t == json_types::VALUE_NULL; }
+		inline bool is_object() const { return this->t == json_types::VALUE_OBJ; }
+		inline bool is_string() const { return this->t == json_types::VALUE_STRING; }
 		
 		// serialize and deserailze
 		
 		int loads(const std::string& buf);
-		int dumps(std::string& buf);
+		int dumps(std::string& buf, bool compact, size_t tab);
 		int loads_file(const std::string& fname);
 		int dumps_file(const std::string& fname);
 		int loads_stream(std::istream& stream);

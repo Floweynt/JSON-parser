@@ -62,22 +62,22 @@ namespace json
 			if (d > INT_MIN && d < INT_MAX)
 			{
 				if (obj.is_object())
-					obj.push_back(std::make_pair(key, (int)d));
+					obj.push_back(std::make_pair(key, (JSONobj)d));
 				else if (obj.is_array())
-					obj.push_back((int)d);
+					obj.push_back((JSONobj)d);
 			}
 			else
 			{
 				if (obj.is_object())
-					obj.push_back(std::make_pair(key, (double)d));
+					obj.push_back(std::make_pair(key, (JSONobj)d));
 				else if (obj.is_array())
-					obj.push_back((double)d);
+					obj.push_back((JSONobj)d);
 			}
 		}
 		return 0;
 	}
 
-	class parse_frame
+	class loads_frame
 	{
 		std::stack<pack> frames;
 	public:
@@ -106,7 +106,7 @@ namespace json
 		states s = OBJ;
 		size_t layer = 0;
 
-		parse_frame frames;
+		loads_frame frames;
 		JSONobj root;
 
 		std::string key;
@@ -174,7 +174,7 @@ namespace json
 						layer++;
 						frames.push_frame(key, root);
 						key.clear();
-						root.set_type(types::VALUE_ARRAY);
+						root.set_type(json_types::VALUE_ARRAY);
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
 					else if (buf[i] == '{')
@@ -182,7 +182,7 @@ namespace json
 						layer++;
 						frames.push_frame(key, root);
 						key.clear();
-						root.set_type(types::VALUE_OBJ);
+						root.set_type(json_types::VALUE_OBJ);
 						s = WAIT_FOR_KEY;
 					}
 					else if (isspace(buf[i]));
@@ -197,9 +197,9 @@ namespace json
 						layer--;
 						if (layer != 0)
 							frames.merge_frames(root);
-						if (root.get_type() == types::VALUE_ARRAY)
+						if (root.get_type() == json_types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
-						else if (root.get_type() == types::VALUE_OBJ)
+						else if (root.get_type() == json_types::VALUE_OBJ)
 							s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == ']')
@@ -287,9 +287,9 @@ namespace json
 						layer--;
 						if (layer != 0)
 							frames.merge_frames(root);
-						if (root.get_type() == types::VALUE_ARRAY)
+						if (root.get_type() == json_types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
-						else if (root.get_type() == types::VALUE_OBJ)
+						else if (root.get_type() == json_types::VALUE_OBJ)
 							s = WAIT_FOR_COMMA;
 					}
 					else
@@ -327,9 +327,9 @@ namespace json
 						layer--;
 						if (layer != 0)
 							frames.merge_frames(root);
-						if (root.get_type() == types::VALUE_ARRAY)
+						if (root.get_type() == json_types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
-						else if (root.get_type() == types::VALUE_OBJ)
+						else if (root.get_type() == json_types::VALUE_OBJ)
 							s = WAIT_FOR_COMMA;
 					}
 					else
@@ -350,14 +350,14 @@ namespace json
 					{
 						layer++;
 						frames.push_frame(key, root);
-						root.set_type(types::VALUE_ARRAY);
+						root.set_type(json_types::VALUE_ARRAY);
 						s = ARRAY_WAIT_FOR_VALUE;
 					}
 					else if (buf[i] == '{')
 					{
 						layer++;
 						frames.push_frame(key, root);
-						root.set_type(types::VALUE_OBJ);
+						root.set_type(json_types::VALUE_OBJ);
 						s = WAIT_FOR_KEY_OBJ;
 					}
 					else if (isspace(buf[i]));
@@ -372,9 +372,9 @@ namespace json
 						layer--;
 						if (layer != 0)
 							frames.merge_frames(root);
-						if (root.get_type() == types::VALUE_ARRAY)
+						if (root.get_type() == json_types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
-						else if (root.get_type() == types::VALUE_OBJ)
+						else if (root.get_type() == json_types::VALUE_OBJ)
 							s = WAIT_FOR_COMMA;
 					}
 					else if (buf[i] == '}')
@@ -420,9 +420,9 @@ namespace json
 						layer--;
 						if (layer != 0)
 							frames.merge_frames(root);
-						if (root.get_type() == types::VALUE_ARRAY)
+						if (root.get_type() == json_types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
-						else if (root.get_type() == types::VALUE_OBJ)
+						else if (root.get_type() == json_types::VALUE_OBJ)
 							s = WAIT_FOR_COMMA;
 					}
 					break;
@@ -460,9 +460,9 @@ namespace json
 						layer--;
 						if (layer != 0)
 							frames.merge_frames(root);
-						if (root.get_type() == types::VALUE_ARRAY)
+						if (root.get_type() == json_types::VALUE_ARRAY)
 							s = ARRAY_WAIT_FOR_COMMA;
-						else if (root.get_type() == types::VALUE_OBJ)
+						else if (root.get_type() == json_types::VALUE_OBJ)
 							s = WAIT_FOR_COMMA;
 					}
 					break;

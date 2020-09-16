@@ -14,25 +14,25 @@ namespace json
 		// switch on type for copy
 		switch (rhs.t)
 		{
-		case types::VALUE_OBJ:
+		case json_types::VALUE_OBJ:
 			this->to_value = new json_obj(*(json_obj*)rhs.to_value);
 			break;
-		case types::VALUE_ARRAY:
+		case json_types::VALUE_ARRAY:
 			this->to_value = new json_array(*(json_array*)rhs.to_value);
 			break;
-		case types::VALUE_STRING:
+		case json_types::VALUE_STRING:
 			this->to_value = new json_string(*(json_string*)rhs.to_value);
 			break;
-		case types::VALUE_INT:
+		case json_types::VALUE_INT:
 			this->to_value = new json_int(*(json_int*)rhs.to_value);
 			break;
-		case types::VALUE_DOUBLE:
+		case json_types::VALUE_DOUBLE:
 			this->to_value = new json_float(*(json_float*)rhs.to_value);
 			break;
-		case types::VALUE_BOOL:
+		case json_types::VALUE_BOOL:
 			this->to_value = new json_bool(*(json_bool*)rhs.to_value);
 			break;
-		case types::VALUE_NULL:
+		case json_types::VALUE_NULL:
 			this->to_value = nullptr;
 			break;
 		default:
@@ -46,10 +46,10 @@ namespace json
 		this->to_value = rhs.to_value;
 		this->t = rhs.t;
 		rhs.to_value = nullptr;
-		rhs.t = types::VALUE_NULL;
+		rhs.t = json_types::VALUE_NULL;
 	}
 
-	JSONobj::JSONobj(types t)
+	JSONobj::JSONobj(json_types t)
 	{
 		this->t = t;
 		switch (t)
@@ -77,7 +77,7 @@ namespace json
 			break;
 		default:
 			this->to_value = nullptr;
-			this->t = types::VALUE_NULL;
+			this->t = json_types::VALUE_NULL;
 			break;
 		}
 	}
@@ -88,31 +88,31 @@ namespace json
 		// switch on type for delete
 		switch (this->t)
 		{
-		case types::VALUE_OBJ:
+		case json_types::VALUE_OBJ:
 			delete (json_obj*)this->to_value;
 			break;
-		case types::VALUE_ARRAY:
+		case json_types::VALUE_ARRAY:
 			delete (json_array*)this->to_value;
 			break;
-		case types::VALUE_STRING:
+		case json_types::VALUE_STRING:
 			delete (json_string*)this->to_value;
 			break;
-		case types::VALUE_INT:
+		case json_types::VALUE_INT:
 			delete (json_int*)this->to_value;
 			break;
-		case types::VALUE_DOUBLE:
+		case json_types::VALUE_DOUBLE:
 			delete (json_float*)this->to_value;
 			break;
-		case types::VALUE_BOOL:
+		case json_types::VALUE_BOOL:
 			delete (json_bool*)this->to_value;
 			break;
-		case types::VALUE_NULL:
+		case json_types::VALUE_NULL:
 			// uhhh idk nothing to do here
 			break;
 		default:
 			break;
 		}
-		this->t = types::VALUE_NULL;
+		this->t = json_types::VALUE_NULL;
 		this->to_value = nullptr;
 	}
 
@@ -120,25 +120,25 @@ namespace json
 
 	JSONobj::JSONobj(const JSONobj::json_bool init)
 	{
-		this->t = types::VALUE_BOOL;
+		this->t = json_types::VALUE_BOOL;
 		this->to_value = new json_bool(init);
 	}
 
 	JSONobj::JSONobj(const JSONobj::json_float init)
 	{
-		this->t = types::VALUE_DOUBLE;
+		this->t = json_types::VALUE_DOUBLE;
 		this->to_value = new json_float(init);
 	}
 
 	JSONobj::JSONobj(const JSONobj::json_int init)
 	{
-		this->t = types::VALUE_INT;
+		this->t = json_types::VALUE_INT;
 		this->to_value = new json_int(init);
 	}
 
 	JSONobj::JSONobj(const std::string& init)
 	{
-		this->t = types::VALUE_STRING;
+		this->t = json_types::VALUE_STRING;
 		this->to_value = new json_string(init);
 	}
 
@@ -147,14 +147,14 @@ namespace json
 	/** MOTIFIERS **/
 	void JSONobj::push_back(const JSONobj::json_obj::value_type& val)
 	{
-		if (this->t != types::VALUE_OBJ)
+		if (this->t != json_types::VALUE_OBJ)
 			throw json_type_error("unable to insert key-value pair in non-object type");
 		((json_obj*)this->to_value)->insert(val);
 	}
 
 	void JSONobj::push_back(const JSONobj::json_array::value_type& val)
 	{
-		if (this->t != types::VALUE_ARRAY)
+		if (this->t != json_types::VALUE_ARRAY)
 			throw json_type_error("unable to insert value in non-array type");
 		((json_array*)this->to_value)->push_back(val);
 	}
@@ -162,35 +162,35 @@ namespace json
 	/** BASIC GET OPERATIONS **/
 	JSONobj::json_array& JSONobj::get_array()
 	{
-		if (this->t != types::VALUE_ARRAY)
+		if (this->t != json_types::VALUE_ARRAY)
 			throw json_type_error("unable to get array in non-array type");
 		return *(json_array*)this->to_value;
 	}
 
 	JSONobj::json_float& JSONobj::get_float()
 	{
-		if (this->t != types::VALUE_DOUBLE)
+		if (this->t != json_types::VALUE_DOUBLE)
 			throw json_type_error("unable to get float in non-float type");
 		return *(json_float*)this->to_value;
 	}
 
 	JSONobj::json_int& JSONobj::get_int()
 	{
-		if (this->t != types::VALUE_INT)
+		if (this->t != json_types::VALUE_INT)
 			throw json_type_error("unable to get int in non-int type");
 		return *(json_int*)this->to_value;
 	}
 
 	JSONobj::json_obj& JSONobj::get_object()
 	{
-		if (this->t != types::VALUE_OBJ)
+		if (this->t != json_types::VALUE_OBJ)
 			throw json_type_error("unable to get object in non-object type");
 		return *(json_obj*)this->to_value;
 	}
 
 	JSONobj::json_string& JSONobj::get_string()
 	{
-		if (this->t != types::VALUE_STRING)
+		if (this->t != json_types::VALUE_STRING)
 			throw json_type_error("unable to get string in non-string type");
 		return *(json_string*)this->to_value;
 	}
@@ -201,25 +201,25 @@ namespace json
 		// free data
 		switch (this->t)
 		{
-		case types::VALUE_OBJ:
+		case json_types::VALUE_OBJ:
 			delete (json_obj*)this->to_value;
 			break;
-		case types::VALUE_ARRAY:
+		case json_types::VALUE_ARRAY:
 			delete (json_array*)this->to_value;
 			break;
-		case types::VALUE_STRING:
+		case json_types::VALUE_STRING:
 			delete (json_string*)this->to_value;
 			break;
-		case types::VALUE_INT:
+		case json_types::VALUE_INT:
 			delete (json_int*)this->to_value;
 			break;
-		case types::VALUE_DOUBLE:
+		case json_types::VALUE_DOUBLE:
 			delete (json_float*)this->to_value;
 			break;
-		case types::VALUE_BOOL:
+		case json_types::VALUE_BOOL:
 			delete (json_bool*)this->to_value;
 			break;
-		case types::VALUE_NULL:
+		case json_types::VALUE_NULL:
 			// uhhh idk nothing to do here
 			break;
 		default:
@@ -227,7 +227,7 @@ namespace json
 		}
 
 		// set to null
-		this->t = types::VALUE_NULL;
+		this->t = json_types::VALUE_NULL;
 		this->to_value = nullptr;
 	}
 
@@ -239,25 +239,25 @@ namespace json
 		// switch on type for delete
 		switch (this->t)
 		{
-		case types::VALUE_OBJ:
+		case json_types::VALUE_OBJ:
 			delete (json_obj*)this->to_value;
 			break;
-		case types::VALUE_ARRAY:
+		case json_types::VALUE_ARRAY:
 			delete (json_array*)this->to_value;
 			break;
-		case types::VALUE_STRING:
+		case json_types::VALUE_STRING:
 			delete (json_string*)this->to_value;
 			break;
-		case types::VALUE_INT:
+		case json_types::VALUE_INT:
 			delete (json_int*)this->to_value;
 			break;
-		case types::VALUE_DOUBLE:
+		case json_types::VALUE_DOUBLE:
 			delete (json_float*)this->to_value;
 			break;
-		case types::VALUE_BOOL:
+		case json_types::VALUE_BOOL:
 			delete (json_bool*)this->to_value;
 			break;
-		case types::VALUE_NULL:
+		case json_types::VALUE_NULL:
 			// uhhh idk nothing to do here
 			break;
 		default:
@@ -268,25 +268,25 @@ namespace json
 		// switch on type for copy
 		switch (rhs.t)
 		{
-		case types::VALUE_OBJ:
+		case json_types::VALUE_OBJ:
 			this->to_value = new json_obj(*(json_obj*)rhs.to_value);
 			break;
-		case types::VALUE_ARRAY:
+		case json_types::VALUE_ARRAY:
 			this->to_value = new json_array(*(json_array*)rhs.to_value);
 			break;
-		case types::VALUE_STRING:
+		case json_types::VALUE_STRING:
 			this->to_value = new json_string(*(json_string*)rhs.to_value);
 			break;
-		case types::VALUE_INT:
+		case json_types::VALUE_INT:
 			this->to_value = new json_int(*(json_int*)rhs.to_value);
 			break;
-		case types::VALUE_DOUBLE:
+		case json_types::VALUE_DOUBLE:
 			this->to_value = new json_float(*(json_float*)rhs.to_value);
 			break;
-		case types::VALUE_BOOL:
+		case json_types::VALUE_BOOL:
 			this->to_value = new json_bool(*(json_bool*)rhs.to_value);
 			break;
-		case types::VALUE_NULL:
+		case json_types::VALUE_NULL:
 			this->to_value = nullptr;
 			break;
 		default:
@@ -294,9 +294,39 @@ namespace json
 		}
 	}
 
-	void JSONobj::set_type(types t)
+	void JSONobj::set_type(json_types t)
 	{
 		this->nullify();
+	}
+
+	bool JSONobj::empty()
+	{
+		if (this->t == json_types::VALUE_ARRAY)
+			return this->get_array().empty();
+		else if (this->t == json_types::VALUE_OBJ)
+			return this->get_object().empty();
+		else
+			return true;
+	}
+
+	JSONobj::size_type JSONobj::size()
+	{
+		if (this->t == json_types::VALUE_ARRAY)
+			return this->get_array().size();
+		else if (this->t == json_types::VALUE_OBJ)
+			return this->get_object().size();
+		else
+			return -1U;
+	}
+
+	JSONobj::iterator JSONobj::begin()
+	{
+
+	}
+
+	JSONobj::iterator JSONobj::end()
+	{
+
 	}
 
 	/*std::ostream& operator<<(std::ostream& os, const JSONobj& out)

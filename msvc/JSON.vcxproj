@@ -127,6 +127,7 @@
     <ClInclude Include="..\json\macros.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\json\dumps.cpp" />
     <ClCompile Include="..\json\json.cpp" />
     <ClCompile Include="..\json\parser\loads.cpp" />
     <ClCompile Include="..\test.cpp" />
