@@ -1,6 +1,8 @@
 # JSON parser
-![C/C++ CI](https://github.com/FloweyTheFlower420/File-parsers/workflows/C/C++%20CI/badge.svg)  
-This is a parser for JSON formated files.
+| Branch  | Status |
+| ------------- | ------------- |
+| Master  | ![C/C++ CI](https://github.com/FloweyTheFlower420/File-parsers/workflows/C/C++%20CI/badge.svg)    |
+| Dev  | ![C/C++ CI](https://github.com/FloweyTheFlower420/File-parsers/workflows/C/C++%20CI/badge.svg)    |
 ## Build
 To build this project on linux, use `make lib` to complile. The libary will be located in `objects/json.a`
 ## Examples 
