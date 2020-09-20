@@ -54,25 +54,25 @@ namespace json
 		this->t = t;
 		switch (t)
 		{
-		case json::VALUE_OBJ:
+		case json::JSONobj::VALUE_OBJ:
 			this->to_value = new json_obj;
 			break;
-		case json::VALUE_ARRAY:
+		case json::JSONobj::VALUE_ARRAY:
 			this->to_value = new json_array;
 			break;
-		case json::VALUE_STRING:
+		case json::JSONobj::VALUE_STRING:
 			this->to_value = new json_string;
 			break;
-		case json::VALUE_INT:
+		case json::JSONobj::VALUE_INT:
 			this->to_value = new json_int(0);
 			break;
-		case json::VALUE_DOUBLE:
+		case json::JSONobj::VALUE_DOUBLE:
 			this->to_value = new json_float(0);
 			break;
-		case json::VALUE_BOOL:
+		case json::JSONobj::VALUE_BOOL:
 			this->to_value = new json_bool(false);
 			break;
-		case json::VALUE_NULL:
+		case json::JSONobj::VALUE_NULL:
 			this->to_value = nullptr;
 			break;
 		default:
@@ -327,6 +327,49 @@ namespace json
 	JSONobj::iterator JSONobj::end()
 	{
 
+	}
+
+	int JSONobj::loads_file(const std::string& fname)
+	{
+		std::string buf;
+		FILE* fd = fopen(buf.c_str(), "r");
+		if (!fd)
+			return -1;
+
+		// obtain size of file
+		fseek(fd, 0, SEEK_END);
+		size_t size = ftell(fd);
+		rewind(fd);
+
+		buf.resize(size);
+		fread((void*)buf.data(), 1, size, fd);
+		return this->loads(buf);
+	}
+
+	int JSONobj::dumps_file(const std::string& fname)
+	{
+		std::string buf;
+		int ret = dumps(buf);
+		FILE* fd = fopen(fname.c_str(), "w");
+		if (!fd)
+			return -1;
+
+		fwrite((void*)buf.data(), 1, buf.size(), fd);
+		return ret;
+	}
+
+	int JSONobj::loads_stream(std::istream& stream)
+	{
+		std::string buf;
+		stream >> buf;
+		return this->loads(buf);
+	}
+	int JSONobj::dumps_stream(std::ostream& stream)
+	{
+		std::string buf;
+		int ret = this->loads(buf);
+		stream << buf;
+		return ret;
 	}
 
 	/*std::ostream& operator<<(std::ostream& os, const JSONobj& out)

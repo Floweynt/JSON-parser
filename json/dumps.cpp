@@ -33,21 +33,17 @@ namespace json
 
 		JSONobj::iterator obj_begin = this->begin();
 		JSONobj::iterator obj_end = this->begin();
-		std::stack<iter> frames;
+		std::stack<dumps_frame> frames;
 
 		while (true)
 		{
-			bool is_end;
-			if (t == json_types::VALUE_ARRAY)
-				is_end = array_iter == array_end;
-			else if (t == json_types::VALUE_OBJ)
-				is_end = obj_iter == obj_end;
+			bool is_end = obj_begin == obj_end;
 
 			if (is_end && layer == 1)
 				break;
 			else if (is_end)
 			{
-				iter it = frames.top();
+				dumps_frame it = frames.top();
 				frames.pop();
 
 				if (t == VALUE_ARRAY)

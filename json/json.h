@@ -27,6 +27,8 @@ namespace json
 		json_type_error(const char* p) : json_error(p) {};
 	};
 
+
+	// JSON iterator
 	class JSONobj_iterator : std::iterator < std::forward_iterator_tag, JSONobj, size_t>
 	{
 	public:
@@ -93,6 +95,8 @@ namespace json
 		}
 	};
 
+
+	// JSON object
 	class JSONobj
 	{
 		enum json_types // json types
@@ -206,7 +210,7 @@ namespace json
 		// serialize and deserailze
 		
 		int loads(const std::string& buf);
-		int dumps(std::string& buf, bool compact, size_t tab);
+		int dumps(std::string& buf, bool compact = false, size_t tab = 0);
 		int loads_file(const std::string& fname);
 		int dumps_file(const std::string& fname);
 		int loads_stream(std::istream& stream);
