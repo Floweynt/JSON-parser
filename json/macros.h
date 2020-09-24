@@ -8,6 +8,7 @@
 #pragma warning(disable: 4996)
 #endif
 
+#ifdef _DEBUG
 #include <iostream>
 #ifdef PRINT_EXIT
 constexpr bool IS_DEBUG_CONSTEXPR = true;
@@ -16,4 +17,5 @@ constexpr bool IS_DEBUG_CONSTEXPR = false;
 #endif
 
 #define __RETURN__(code) {if (IS_DEBUG_CONSTEXPR) std::cout << "return line: " << __LINE__ << '\n'; return code; }
+#endif
 #endif

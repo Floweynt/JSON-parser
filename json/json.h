@@ -5,7 +5,7 @@
 #define __CFP_JSON_OBJ_H__
 #include "macros.h"
 
-#include <unordered_map>
+#include <map>
 #include <vector>
 #include <ostream>
 #include <stdexcept>
@@ -26,75 +26,6 @@ namespace json
 	public:
 		json_type_error(const char* p) : json_error(p) {};
 	};
-
-
-	// JSON iterator
-	class JSONobj_iterator : std::iterator < std::forward_iterator_tag, JSONobj, size_t>
-	{
-	public:
-		enum json_iterator_types
-		{
-			VALUE_OBJ,
-			VALUE_ARRAY
-		};
-
-	private:
-		JSONobj::json_array::iterator it_array;
-		JSONobj::json_obj::iterator it_obj;
-		json_iterator_types t;
-
-	public:
-		// some of the STL iterator typedefs
-		typedef JSONobj::value_type value_type;
-		typedef JSONobj::size_type difference_type;
-		typedef value_type& reference;
-
-		JSONobj_iterator(JSONobj::json_array::iterator& _it_array)
-		{
-			this->t = json_iterator_types::VALUE_ARRAY;
-			this->it_array = _it_array;
-		}
-
-		// prefix ++ operator
-		JSONobj_iterator& operator++()
-		{
-			switch (t)
-			{
-			case json::JSONobj_iterator::VALUE_OBJ:
-				return; // increment
-			case json::JSONobj_iterator::VALUE_ARRAY:
-				return; // increment
-			default:
-				break;
-			}
-		}
-
-		// suffix ++ operator
-		JSONobj_iterator& operator++(int) 
-		{
-			switch (t)
-			{
-			case json::JSONobj_iterator::VALUE_OBJ:
-				return; // increment
-			case json::JSONobj_iterator::VALUE_ARRAY:
-				return; // increment
-			default:
-				break;
-			}
-		}
-
-		std::string key()
-		{
-
-		}
-
-		// dereferance operator
-		reference operator*()
-		{
-
-		}
-	};
-
 
 	// JSON object
 	class JSONobj
@@ -120,14 +51,50 @@ namespace json
 		typedef value_type& reference;
 		typedef const reference const_reference;
 		typedef size_t size_type;
-		typedef JSONobj_iterator iterator;
-		 
+
 		typedef std::vector<JSONobj> json_array;
 		typedef bool json_bool;
 		typedef double json_float;
 		typedef int64_t json_int;
-		typedef std::unordered_map<std::string, JSONobj> json_obj;
+		typedef std::map<std::string, JSONobj> json_obj;
 		typedef std::string json_string;
+
+		class iterator : std::iterator < std::forward_iterator_tag, JSONobj, size_t>
+		{
+		public:
+			enum json_iterator_types
+			{
+				VALUE_OBJ,
+				VALUE_ARRAY
+			};
+
+		private:
+			void* iter;
+			json_iterator_types t;
+
+		public:
+			// some of the STL iterator typedefs
+			typedef JSONobj::value_type value_type;
+			typedef JSONobj::size_type difference_type;
+			typedef value_type& reference;
+
+			inline iterator() {}
+			inline iterator(const iterator& rhs) {}
+			inline iterator(iterator&& rhs) {}
+			iterator(const json_array::iterator& _it_array);
+			iterator(const json_obj::iterator& _it_obj);
+
+			// prefix ++ operator
+			iterator operator++();
+
+			// suffix ++ operator
+			iterator operator++(int);
+
+
+			std::string key();
+			// dereferance operator
+			reference operator*();
+		};
 
 		// loads errors
 		enum error
@@ -143,7 +110,7 @@ namespace json
 		inline JSONobj() { this->nullify(); }
 		JSONobj(const JSONobj& rhs);		// initalize via copy
 		JSONobj(JSONobj&& rhs) noexcept;	// initalize via move
-		JSONobj(json_types t);					// initalize w/ type
+		JSONobj(json_types t);				// initalize w/ type
 
 		// custom destructor
 		~JSONobj();
@@ -245,6 +212,7 @@ namespace json
 		inline intern::jsonobj get_internal() const { return this->object; }
 
 		friend std::ostream& operator<<(std::ostream& os, const JSONobj& out);*/
+		// iterator class
 	};
 }
 #endif

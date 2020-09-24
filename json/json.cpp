@@ -292,6 +292,7 @@ namespace json
 		default:
 			break;
 		}
+		return *this;
 	}
 
 	void JSONobj::set_type(json_types t)
@@ -318,17 +319,18 @@ namespace json
 		else
 			return -1U;
 	}
-
+	
+	/*
 	JSONobj::iterator JSONobj::begin()
 	{
-
+	
 	}
 
 	JSONobj::iterator JSONobj::end()
 	{
 
 	}
-
+	*/
 	int JSONobj::loads_file(const std::string& fname)
 	{
 		std::string buf;
@@ -372,6 +374,59 @@ namespace json
 		return ret;
 	}
 
+	JSONobj::iterator::iterator(const json_array::iterator& _it_array)
+	{
+		this->t = json_iterator_types::VALUE_ARRAY;
+		this->iter = new json_array::iterator(_it_array);
+	}
+
+	JSONobj::iterator::iterator(const json_obj::iterator& _it_obj)
+	{
+		this->t = json_iterator_types::VALUE_OBJ;
+		this->iter = new json_obj::iterator(_it_obj);
+	}
+
+	// prefix ++ operator
+	JSONobj::iterator JSONobj::iterator::operator++()
+	{
+		switch (t)
+		{
+		case JSONobj::iterator::VALUE_OBJ:
+			return (*(json_obj::iterator*)iter)++; // increment
+		case JSONobj::iterator::VALUE_ARRAY:
+			return (*(json_array::iterator*)iter)++; // increment
+		default:
+			break;
+		}
+	}
+
+	// suffix ++ operator
+	JSONobj::iterator JSONobj::iterator::operator++(int)
+	{
+		switch (t)
+		{
+		case JSONobj::iterator::VALUE_OBJ:
+			return ++(*(json_obj::iterator*)iter); // increment
+		case JSONobj::iterator::VALUE_ARRAY:
+			return ++(*(json_array::iterator*)iter); // increment
+		default:
+			break;
+		}
+	}
+
+	/*
+	std::string JSONobj::iterator::key()
+	{
+
+	}
+	
+
+	// dereferance operator
+	JSONobj::iterator::reference JSONobj::iterator::operator*()
+	{
+
+	}
+	*/
 	/*std::ostream& operator<<(std::ostream& os, const JSONobj& out)
 	{
 		if (out.get_internal().get_type() == types::VALUE_OBJ)
